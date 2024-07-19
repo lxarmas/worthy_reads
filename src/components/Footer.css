@@ -1,0 +1,15 @@
+/* Footer.css */
+.footer {
+    background-color: transparent; /* Make background transparent */
+    color: #fff; /* Set text color to white or another contrasting color */
+    padding: 1rem 0; /* Adjust padding as needed */
+    border-top: 1px solid #ddd; /* Optional: Add a border if needed */
+}
+
+.footer .book-icon {
+    margin-bottom: 0.5rem; /* Adjust margin as needed */
+}
+
+.footer .text-muted {
+    color: #ccc; /* Set text color for muted text */
+}
