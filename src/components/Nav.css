@@ -1,0 +1,26 @@
+/* Navigation */
+.nav {
+    background-color: #ffffff;
+    padding: 1em;
+    display: grid;
+    grid-template-columns: 2fr 6fr;
+    align-items: center;
+}
+.nav-links {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    justify-content:space-around;
+    grid-column: 2/3;
+    margin-bottom: 10px;
+}
+.nav-links li {
+    display: inline;
+    margin-right: 1em;
+}
+.nav-links li a {
+    text-decoration: none;
+    color:  #1b675e;
+    font-weight: bold;
+
+}
