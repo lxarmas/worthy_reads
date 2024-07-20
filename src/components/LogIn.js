@@ -1,23 +1,25 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom'; // Import useNavigate
 import { loginUser } from '../api';
 
 function LogIn() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const navigate = useNavigate(); // Initialize navigate
 
-const handleSubmit = async (event) => {
-  event.preventDefault();
-  try {
-    const response = await loginUser({ username: email, password }); // Use 'username' if that's what the server expects
-    console.log('Login successful:', response);
-    localStorage.setItem('token', response.data.token); // Ensure token is correctly returned by server
-  } catch (error) {
-    console.error('Login error:', error.response ? error.response.data : error.message);
-    setError('Login failed. Please try again.');
-  }
-};
-
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    try {
+      const response = await loginUser({ username: email, password }); // Ensure 'username' is what your API expects
+      console.log('Login successful:', response);
+      localStorage.setItem('token', response.data.token); // Ensure token is correctly returned by the server
+      navigate('/books'); // Redirect to books page after successful login
+    } catch (error) {
+      console.error('Login error:', error.response ? error.response.data : error.message);
+      setError('Login failed. Please try again.');
+    }
+  };
 
   return (
     <form onSubmit={handleSubmit}>
