@@ -39,7 +39,7 @@ return (
     </div>
   </div>
     </div>
-    <div class="home-background"></div>
+    <div className="home-background"></div>
    <div className="intro-home">
   This page is dedicated to the books that you love most and you want have them
   at hand at your disposal. We make this website based in our love for all books

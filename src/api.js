@@ -1,6 +1,7 @@
+// src/api.js
 import axios from 'axios';
 
-const API_URL = 'http://localhost:3001/api'; // Assuming the backend server runs on the same origin or adjust accordingly
+const API_URL = 'http://localhost:3001/api';
 
 export const registerUser = async (data) => {
     return axios.post(`${API_URL}/register`, data);

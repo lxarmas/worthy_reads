@@ -1,23 +1,23 @@
-// src/components/LoginComponent.js
 import React, { useState } from 'react';
-import { loginUser } from '../api'; // Adjust the path as needed
+import { loginUser } from '../api';
 
-function LoginComponent() {
+function LogIn() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    try {
-      const response = await loginUser({ username: email, password });
-      console.log('Login successful:', response);
-      // Handle successful login (e.g., store token, redirect, etc.)
-    } catch (error) {
-      console.error('Login error:', error);
-      setError('Login failed. Please try again.');
-    }
-  };
+const handleSubmit = async (event) => {
+  event.preventDefault();
+  try {
+    const response = await loginUser({ username: email, password }); // Use 'username' if that's what the server expects
+    console.log('Login successful:', response);
+    localStorage.setItem('token', response.data.token); // Ensure token is correctly returned by server
+  } catch (error) {
+    console.error('Login error:', error.response ? error.response.data : error.message);
+    setError('Login failed. Please try again.');
+  }
+};
+
 
   return (
     <form onSubmit={handleSubmit}>
@@ -53,4 +53,4 @@ function LoginComponent() {
   );
 }
 
-export default LoginComponent;
+export default LogIn;

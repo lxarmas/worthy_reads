@@ -7,7 +7,7 @@ const { Client } = require('pg');
 const path = require('path');
 
 const app = express();
-const port = 3001; // Ensure this matches your backend port
+const port = process.env.PORT || 3001; // Ensure this matches your backend port
 
 // Use CORS middleware
 app.use(cors({
@@ -15,7 +15,6 @@ app.use(cors({
   methods: ['GET', 'POST', 'DELETE'],
   credentials: true // if you need to allow cookies or authentication headers
 }));
-
 
 // Generate a random secret key
 const secretKey = crypto.randomBytes(32).toString('hex');
@@ -41,6 +40,9 @@ const client = new Client({
 client.connect()
   .then(() => console.log('Connected to PostgreSQL database'))
   .catch(error => console.error('Error connecting to PostgreSQL database:', error));
+
+// Serve static files from the React app
+app.use(express.static(path.join(__dirname, 'build')));
 
 // Define routes for API endpoints
 app.post('/api/register', async (req, res) => {
@@ -85,7 +87,10 @@ app.post('/api/login', async (req, res) => {
   }
 });
 
-// Other routes...
+// Catch-all handler for any requests that don't match the above
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'build', 'index.html'));
+});
 
 app.listen(port, () => {
   console.log(`Server is running on http://localhost:${port}`);
