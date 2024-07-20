@@ -1,6 +1,4 @@
-function Main() {
-    return (
-       <>
+// Function to initialize the Google Books viewer with the given thumbnail URL
 function initialize(thumbnailUrl) {
     const viewerCanvas = document.getElementById('viewerCanvas');
     viewerCanvas.innerHTML = ''; // Clear previous content if any
@@ -72,7 +70,3 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   });
 });
-</>
-    )
-}
-export default Main;

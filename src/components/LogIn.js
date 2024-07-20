@@ -1,53 +1,56 @@
-function LogIn() {
-    return (
-      <div class="container mt-5">
-  <h1 className="text-center">Login</h1>
+// src/components/LoginComponent.js
+import React, { useState } from 'react';
+import { loginUser } from '../api'; // Adjust the path as needed
 
-  <div className="row justify-content-center">
-    <div className="col-md-6">
-      <div className="card">
-        <div className="card-body">
-        {/* makes post request */}
-          <form action="/login" method="POST">
-            <div className="form-group">
-              <label for="email">Email</label>
-              <input
-                type="email"
-                className="form-control"
-                name="username"
-                placeholder="Enter your email"
-                required
-              />
-            </div>
-            <div className="form-group">
-              <label for="password">Password</label>
-              <input
-                type="password"
-                className="form-control"
-                name="password"
-                placeholder="Enter your password"
-                required
-              />
-            </div>
-            <button
-            type="submit"
-            className="btn btn-primary btn-block"
-            style={{
-            backgroundColor: 'rgb(44, 122, 110)',
-            borderColor: ' rgb(44, 122, 110)',
-            }}
-            >
-              Login
-            </button>
-          </form>
-          <div class="text-center mt-3">
-            <p>Don't have an account? <a href="/register">Register here</a></p>
-          </div>
-        </div>
+function LoginComponent() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    try {
+      const response = await loginUser({ username: email, password });
+      console.log('Login successful:', response);
+      // Handle successful login (e.g., store token, redirect, etc.)
+    } catch (error) {
+      console.error('Login error:', error);
+      setError('Login failed. Please try again.');
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <div className="form-group">
+        <label htmlFor="email">Email</label>
+        <input
+          type="email"
+          className="form-control"
+          id="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="Enter your email"
+          required
+        />
       </div>
-    </div>
-  </div>
-</div>
-    )
+      <div className="form-group">
+        <label htmlFor="password">Password</label>
+        <input
+          type="password"
+          className="form-control"
+          id="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder="Enter your password"
+          required
+        />
+      </div>
+      <button type="submit" className="btn btn-primary">
+        Login
+      </button>
+      {error && <p className="text-danger">{error}</p>}
+    </form>
+  );
 }
-export default LogIn;
+
+export default LoginComponent;
