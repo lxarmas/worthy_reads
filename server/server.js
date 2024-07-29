@@ -5,9 +5,10 @@ const crypto = require('crypto');
 const axios = require('axios');
 const { Client } = require('pg');
 const path = require('path');
+const cors = require('cors'); // Import CORS
 
 const app = express();
-const port = 3000;
+const port = 3000; // Ensure this is set to the correct port for your backend
 
 // Generate a random secret key for sessions
 const secretKey = crypto.randomBytes(32).toString('hex');
@@ -20,13 +21,17 @@ app.use(session({
   cookie: { secure: false } // Set secure to true if using HTTPS
 }));
 
+// CORS configuration
+const corsOptions = {
+  origin: 'http://localhost:3001',// Set this to the correct origin for your frontend
+  credentials: true, // Allow credentials (cookies, authorization headers, etc.)
+};
+
 // Middleware
+app.use(cors(corsOptions)); // Use CORS middleware
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json()); // Parse JSON bodies
-
-// Set view engine (if using EJS for server-side rendering)
-app.set('view engine', 'ejs');
 
 // PostgreSQL client setup
 const client = new Client({
@@ -78,25 +83,24 @@ app.post('/api/register', async (req, res) => {
 
 // User login
 app.post('/api/login', async (req, res) => {
-    const { username, password } = req.body;
+  const { username, password } = req.body;
 
-    try {
-        const result = await client.query('SELECT * FROM users WHERE username = $1', [username]);
-        if (result.rows.length > 0) {
-            const user = result.rows[0];
-            if (password === user.password) { // Compare passwords
-                req.session.user_id = user.user_id; // Store user ID in session
-                return res.json({ message: 'Login successful', user_id: user.user_id });
-            }
-            return res.status(400).send('Incorrect password');
-        }
-        return res.status(404).send('User not found');
-    } catch (err) {
-        console.log(err);
-        res.status(500).send('Internal Server Error');
+  try {
+    const result = await client.query('SELECT * FROM users WHERE username = $1', [username]);
+    if (result.rows.length > 0) {
+      const user = result.rows[0];
+      if (password === user.password) { // Compare passwords
+        req.session.user_id = user.user_id; // Store user ID in session
+        return res.json({ message: 'Login successful', user_id: user.user_id });
+      }
+      return res.status(400).send('Incorrect password');
     }
+    return res.status(404).send('User not found');
+  } catch (err) {
+    console.log(err);
+    res.status(500).send('Internal Server Error');
+  }
 });
-
 
 // User logout
 app.post('/logout', (req, res) => {
@@ -117,7 +121,7 @@ app.post('/api/books', async (req, res) => {
     if (!bookData) {
       return res.status(404).send('Book not found');
     }
-    
+
     const thumbnailUrl = bookData.volumeInfo.imageLinks ? bookData.volumeInfo.imageLinks.thumbnail : null;
     const descriptionBook = bookData.volumeInfo.description || '';
 
