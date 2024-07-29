@@ -2,53 +2,56 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
-
 function Book() {
   const [books, setBooks] = useState([]);
   const [title, setTitle] = useState('');
   const [author, setAuthor] = useState('');
-  const [userId, setUserId] = useState(localStorage.getItem('userId')); // Assuming user ID is stored in local storage
+  const [userId, setUserId] = useState(localStorage.getItem('userId')); // Ensure this is set during login
   const [user, setUser] = useState({});
+  const [error, setError] = useState(null); // For displaying errors
   const navigate = useNavigate();
 
-  useEffect(() => {
-    // Fetch user data and books
-    const fetchBooks = async () => {
-      try {
-        const response = await axios.get('/api/books');
-        setBooks(response.data.books);
-        setUser(response.data.user);
-      } catch (error) {
-        console.error('Error fetching books:', error);
-      }
-    };
+useEffect(() => {
+  const fetchBooks = async () => {
+    if (!userId) return; // Don't fetch if userId is not set
+    try {
+      const response = await axios.get(`http://localhost:3000/api/books/${userId}`); // Fetch books for the specific user
+      setBooks(response.data); // Set the fetched books to state
+    } catch (error) {
+      console.error('Error fetching books:', error);
+      setError('Failed to fetch books. Please try again.'); // Display error
+    }
+  };
 
-    fetchBooks();
-  }, []);
+  fetchBooks();
+}, [userId]); // Re-run if userId changes
 
   const handleLogout = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('userId'); // Clear userId on logout
     navigate('/login');
   };
 
   const handleAddBook = async (event) => {
     event.preventDefault();
     try {
-      const response = await axios.post('/api/books', { title, author, user_id: userId });
-      setBooks(response.data.dbData); // Update the books list with the new book
+      const response = await axios.post('http://localhost:3000/api/books', { title, author, user_id: userId });
+      setBooks(prevBooks => [...prevBooks, response.data]); // Add the new book to the list
       setTitle('');
       setAuthor('');
     } catch (error) {
       console.error('Error adding book:', error);
+      setError('Failed to add book. Please try again.'); // Display error
     }
   };
 
   const handleDeleteBook = async (bookId) => {
     try {
-      const response = await axios.delete(`/api/books/${bookId}`);
-      setBooks(response.data.dbData); // Update the books list after deletion
+      await axios.delete(`http://localhost:3000/api/books/${bookId}`);
+      setBooks(prevBooks => prevBooks.filter(book => book.book_id !== bookId)); // Remove deleted book
     } catch (error) {
       console.error('Error deleting book:', error);
+      setError('Failed to delete book. Please try again.'); // Display error
     }
   };
 
@@ -78,6 +81,8 @@ function Book() {
         />
         <button type="submit">Add Book</button>
       </form>
+
+      {error && <p className="text-danger">{error}</p>} {/* Display error message */}
 
       <h2 className="countBook">You have read <span id="bookCount">{books.length}</span> books, keep up the good work, friend!</h2>
 

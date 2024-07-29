@@ -55,7 +55,17 @@ app.get('/', async (req, res) => {
   } catch (error) {
     handleError(res, error);
   }
+} );
+app.get('/api/books/:user_id', async (req, res) => {
+  const user_id = req.params.user_id;
+  try {
+    const books = await fetchDataFromDatabase(user_id);
+    res.status(200).json(books);
+  } catch (error) {
+    handleError(res, error);
+  }
 });
+
 
 // User registration
 app.post('/api/register', async (req, res) => {
