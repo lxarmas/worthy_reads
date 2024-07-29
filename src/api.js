@@ -1,24 +1,26 @@
-// src/api.js
 import axios from 'axios';
 
-const API_URL = 'http://localhost:3001/api';
+const api = axios.create({
+  baseURL: 'http://localhost:3001', // Adjust the baseURL as per your backend server's URL
+  withCredentials: true, // Include credentials with requests if needed
+});
 
-export const registerUser = async (data) => {
-    return axios.post(`${API_URL}/register`, data);
+export const registerUser = async (userData) => {
+  return await api.post('/api/register', userData);
 };
 
-export const loginUser = async (data) => {
-    return axios.post(`${API_URL}/login`, data);
+export const loginUser = async (userData) => {
+  return await api.post('/api/login', userData);
 };
 
 export const fetchBooks = async (userId) => {
-    return axios.get(`${API_URL}/books`, { params: { userId } });
+  return await api.get(`/api/books/${userId}`);
 };
 
-export const addBook = async (data) => {
-    return axios.post(`${API_URL}/books`, data);
+export const addBook = async (bookData) => {
+  return await api.post('/api/books', bookData);
 };
 
 export const deleteBook = async (bookId) => {
-    return axios.delete(`${API_URL}/books/${bookId}`);
+  return await api.delete(`/api/books/${bookId}`);
 };

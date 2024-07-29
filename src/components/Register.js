@@ -1,24 +1,34 @@
 import React, { useState } from 'react';
-import axios from 'axios'; // Ensure axios is installed and imported if you're using it for form submission
+import { registerUser } from '../api'; // Ensure the correct path to api.js
 
 function Register() {
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    password: '',
+  });
   const [error, setError] = useState('');
 
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({
+      ...formData,
+      [name]: value,
+    });
+  };
+
   const handleSubmit = async (event) => {
-    event.preventDefault(); // Prevents the default form submission
+    event.preventDefault(); // Prevent default form submission
 
     try {
-      const response = await axios.post('/api/register', {
-        first_name: firstName,
-        last_name: lastName,
-        username: email,
-        password,
+      const response = await registerUser({
+        first_name: formData.firstName,
+        last_name: formData.lastName,
+        username: formData.email,
+        password: formData.password,
       });
-      console.log('Registration successful:', response);
+      console.log('Registration successful:', response.data);
       // Redirect or show success message here
     } catch (error) {
       console.error('Registration error:', error);
@@ -34,45 +44,44 @@ function Register() {
         <div className="col-md-6">
           <div className="card">
             <div className="card-body">
-              {/* Form submission handled by handleSubmit */}
               <form onSubmit={handleSubmit}>
                 <div className="form-group">
-                  <label htmlFor="first_name">First Name</label>
+                  <label htmlFor="firstName">First Name</label>
                   <input
                     type="text"
                     className="form-control"
-                    id="first_name"
-                    name="first_name"
-                    value={firstName}
-                    onChange={(e) => setFirstName(e.target.value)}
+                    id="firstName"
+                    name="firstName"
+                    value={formData.firstName}
+                    onChange={handleChange}
                     placeholder="Enter your first name"
                     required
                   />
                 </div>
 
                 <div className="form-group">
-                  <label htmlFor="last_name">Last Name</label>
+                  <label htmlFor="lastName">Last Name</label>
                   <input
                     type="text"
                     className="form-control"
-                    id="last_name"
-                    name="last_name"
-                    value={lastName}
-                    onChange={(e) => setLastName(e.target.value)}
+                    id="lastName"
+                    name="lastName"
+                    value={formData.lastName}
+                    onChange={handleChange}
                     placeholder="Enter your last name"
                     required
                   />
                 </div>
 
                 <div className="form-group">
-                  <label htmlFor="username">Email</label>
+                  <label htmlFor="email">Email</label>
                   <input
                     type="email"
                     className="form-control"
-                    id="username"
-                    name="username"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    id="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
                     placeholder="Enter your email"
                     required
                   />
@@ -85,8 +94,8 @@ function Register() {
                     className="form-control"
                     id="password"
                     name="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    value={formData.password}
+                    onChange={handleChange}
                     placeholder="Enter your password"
                     required
                   />
