@@ -1,30 +1,34 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { Button, Form, Alert, Card, Container, Row, Col, Spinner } from 'react-bootstrap';
 
-function Book() {
+function Books() {
   const [books, setBooks] = useState([]);
   const [title, setTitle] = useState('');
   const [author, setAuthor] = useState('');
-  const [userId, setUserId] = useState(localStorage.getItem('userId')); // Ensure this is set during login
-  const [user, setUser] = useState({});
+  const [userId] = useState(localStorage.getItem('userId')); // Ensure this is set during login
   const [error, setError] = useState(null); // For displaying errors
+  const [loading, setLoading] = useState(true); // Loading state
   const navigate = useNavigate();
 
-useEffect(() => {
-  const fetchBooks = async () => {
-    if (!userId) return; // Don't fetch if userId is not set
-    try {
-      const response = await axios.get(`http://localhost:3000/api/books/${userId}`); // Fetch books for the specific user
-      setBooks(response.data); // Set the fetched books to state
-    } catch (error) {
-      console.error('Error fetching books:', error);
-      setError('Failed to fetch books. Please try again.'); // Display error
-    }
-  };
+  useEffect(() => {
+    const fetchBooks = async () => {
+      try {
+        const response = await axios.get(`http://localhost:3000/api/books/${userId}`);
+        setBooks(response.data);
+      } catch (error) {
+        console.error('Error fetching books:', error);
+        setError('Failed to fetch books. Please try again.');
+      } finally {
+        setLoading(false); // Stop loading
+      }
+    };
 
-  fetchBooks();
-}, [userId]); // Re-run if userId changes
+    if (userId) {
+      fetchBooks();
+    }
+  }, [userId]);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -56,72 +60,61 @@ useEffect(() => {
   };
 
   return (
-    <div>
-      <button className="logout-button" onClick={handleLogout}>Logout</button>
-      <h2 className="welcomeName">Welcome {user.first_name}</h2>
+    <Container>
+      <Button variant="danger" className="mt-3" onClick={handleLogout}>Logout</Button>
+      <h2 className="mt-3">Welcome User</h2>
 
-      <form className="book-card" onSubmit={handleAddBook}>
-        <label htmlFor="title">Title:</label>
-        <input
-          type="text"
-          id="title"
-          name="title"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          required
-        />
-        <label htmlFor="author">Author:</label>
-        <input
-          type="text"
-          id="author"
-          name="author"
-          value={author}
-          onChange={(e) => setAuthor(e.target.value)}
-          required
-        />
-        <button type="submit">Add Book</button>
-      </form>
+      <Form className="mt-3" onSubmit={handleAddBook}>
+        <Form.Group controlId="formTitle">
+          <Form.Label>Title:</Form.Label>
+          <Form.Control
+            type="text"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            required
+          />
+        </Form.Group>
 
-      {error && <p className="text-danger">{error}</p>} {/* Display error message */}
+        <Form.Group controlId="formAuthor" className="mt-2">
+          <Form.Label>Author:</Form.Label>
+          <Form.Control
+            type="text"
+            value={author}
+            onChange={(e) => setAuthor(e.target.value)}
+            required
+          />
+        </Form.Group>
 
-      <h2 className="countBook">You have read <span id="bookCount">{books.length}</span> books, keep up the good work, friend!</h2>
+        <Button variant="primary" type="submit" className="mt-3">Add Book</Button>
+      </Form>
 
-      <ul className="book-list">
-        {books.length > 0 ? (
-          books.map((book) => (
-            <li key={book.book_id} className="book">
-              <button
-                className="deleteButton"
-                onClick={() => handleDeleteBook(book.book_id)}
-              >
-                Delete
-              </button>
-              <div className="book-cover">
-                {book.image_link ? (
-                  <img src={book.image_link} alt="Book Cover" className="book-image" />
-                ) : (
-                  <span className="error-message">Cover image not available</span>
-                )}
-              </div>
-              <div className="book-details">
-                <div className="description-container">
-                  {book.description_book.trim() !== '' ? (
-                    <span className="description">{book.description_book}</span>
-                  ) : (
-                    <span className="description">Worthy Reads apologizes, no information about this book at the moment</span>
-                  )}
-                </div>
-                <span className="book-title">Book Title: {book.title}</span>
-                <span className="author">Author: {book.author}</span>
-              </div>
-            </li>
-          ))
-        ) : (
-          <li>No books found</li>
-        )}
-      </ul>
-    </div>
+      <h2 className="mt-4">Your Books</h2>
+
+      {loading ? (
+        <Spinner animation="border" className="mt-3" />
+      ) : (
+        <>
+          {error && <Alert variant="danger" className="mt-3">{error}</Alert>}
+
+          <Row className="mt-3">
+            {books.map((book) => (
+              <Col sm={12} md={6} lg={4} key={book.book_id} className="mb-3">
+                <Card>
+                  <Card.Body>
+                    <Card.Title>{book.title}</Card.Title>
+                    <Card.Subtitle className="mb-2 text-muted">By {book.author}</Card.Subtitle>
+                    {book.image_link && <Card.Img variant="top" src={book.image_link} alt={book.title} />}
+                    <Card.Text>{book.description_book}</Card.Text>
+                    <Button variant="danger" onClick={() => handleDeleteBook(book.book_id)}>Delete</Button>
+                  </Card.Body>
+                </Card>
+              </Col>
+            ))}
+          </Row>
+        </>
+      )}
+    </Container>
   );
 }
 
-export default Book;
+export default Books;
