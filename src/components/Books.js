@@ -1,7 +1,9 @@
+// src/components/Books.js
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { Button, Form, Alert, Card, Container, Row, Col, Spinner } from 'react-bootstrap';
+import BookCount from './BookCount'; // Import the new BookCount component
 
 function Books() {
   const [books, setBooks] = useState([]);
@@ -11,6 +13,7 @@ function Books() {
   const [user, setUser] = useState(null); // State for user data
   const [error, setError] = useState(null); // For displaying errors
   const [loading, setLoading] = useState(true); // Loading state
+  const [bookCount, setBookCount] = useState(0); // State for book count
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -63,8 +66,11 @@ function Books() {
 
   const handleDeleteBook = async (bookId) => {
     try {
-      await axios.delete(`http://localhost:3000/api/books/${bookId}`);
-      setBooks(prevBooks => prevBooks.filter(book => book.book_id !== bookId)); // Remove deleted book
+      const response = await axios.delete(`http://localhost:3000/api/books/${bookId}`);
+      if (response.data.success) {
+        setBooks(prevBooks => prevBooks.filter(book => book.book_id !== bookId)); // Remove deleted book
+        setBookCount(response.data.bookCount); // Update the book count
+      }
     } catch (error) {
       console.error('Error deleting book:', error);
       setError('Failed to delete book. Please try again.'); // Display error
@@ -100,7 +106,10 @@ function Books() {
         <Button variant="primary" type="submit" className="mt-3">Add Book</Button>
       </Form>
 
-      <h2 className="mt-4">Your Books</h2>
+      <h2 className="mt-4">Total Books</h2>
+      
+      {/* Use BookCount component */}
+      <BookCount count={bookCount || books.length} />
 
       {loading ? (
         <Spinner animation="border" className="mt-3" />
