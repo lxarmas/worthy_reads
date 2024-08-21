@@ -51,19 +51,24 @@ function Books() {
     localStorage.removeItem('userId'); // Clear userId on logout
     navigate('/login');
   };
-
   const handleAddBook = async (event) => {
     event.preventDefault();
     try {
-      const response = await axios.post('http://localhost:3000/api/books', { title, author, user_id: userId });
-      setBooks(prevBooks => [...prevBooks, response.data]); // Add the new book to the list
+      await axios.post('http://localhost:3000/api/books', { title, author, user_id: userId });
+  
+      // Re-fetch the list of books
+      const response = await axios.get(`http://localhost:3000/api/books/${userId}`);
+      setBooks(response.data); // Update the books state with the latest data
+  
       setTitle('');
       setAuthor('');
     } catch (error) {
       console.error('Error adding book:', error);
-      setError('Failed to add book. Please try again.'); // Display error
+      setError('Failed to add book. Please try again.');
     }
   };
+  
+  
 
   const handleDeleteBook = async (bookId) => {
     try {
