@@ -1,9 +1,9 @@
-// src/components/Books.js
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { Button, Form, Alert, Card, Container, Row, Col, Spinner } from 'react-bootstrap';
-import BookCount from './BookCount'; // Import the new BookCount component
+import BookCount from './BookCount';
+import BookDescription from './BookDescription.js';
 
 function Books() {
   const [books, setBooks] = useState([]);
@@ -14,6 +14,7 @@ function Books() {
   const [error, setError] = useState(null); // For displaying errors
   const [loading, setLoading] = useState(true); // Loading state
   const [bookCount, setBookCount] = useState(0); // State for book count
+  const [selectedBookId, setSelectedBookId] = useState(null); // Track selected book ID
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -77,6 +78,10 @@ function Books() {
     }
   };
 
+  const toggleDescription = (bookId) => {
+    setSelectedBookId(selectedBookId === bookId ? null : bookId); // Toggle visibility
+  };
+
   return (
     <Container>
       <Button variant="danger" className="mt-3" onClick={handleLogout}>Logout</Button>
@@ -120,12 +125,14 @@ function Books() {
           <Row className="mt-3">
             {books.map((book) => (
               <Col sm={4} md={3} lg={2} key={book.book_id} className="mb-3">
-                <Card>
+                <Card onClick={() => toggleDescription(book.book_id)} style={{ cursor: 'pointer' }}>
                   <Card.Body>
                     <Card.Title>{book.title}</Card.Title>
                     <Card.Subtitle className="mb-2 text-muted">By {book.author}</Card.Subtitle>
                     {book.image_link && <Card.Img variant="top" src={book.image_link} alt={book.title} />}
-                    <Card.Text>{book.description_book}</Card.Text>
+                    {selectedBookId === book.book_id && (
+                      <BookDescription description={book.description_book} />
+                    )}
                     <Button variant="danger" onClick={() => handleDeleteBook(book.book_id)}>Delete</Button>
                   </Card.Body>
                 </Card>
