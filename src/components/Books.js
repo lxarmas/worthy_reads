@@ -8,6 +8,7 @@ function Books() {
   const [title, setTitle] = useState('');
   const [author, setAuthor] = useState('');
   const [userId] = useState(localStorage.getItem('userId')); // Ensure this is set during login
+  const [user, setUser] = useState(null); // State for user data
   const [error, setError] = useState(null); // For displaying errors
   const [loading, setLoading] = useState(true); // Loading state
   const navigate = useNavigate();
@@ -25,8 +26,19 @@ function Books() {
       }
     };
 
+    const fetchUser = async () => {
+      try {
+        const response = await axios.get(`http://localhost:3000/api/users/${userId}`);
+        setUser(response.data);
+      } catch (error) {
+        console.error('Error fetching user:', error);
+        setError('Failed to fetch user data. Please try again.');
+      }
+    };
+
     if (userId) {
       fetchBooks();
+      fetchUser();
     }
   }, [userId]);
 
@@ -62,7 +74,7 @@ function Books() {
   return (
     <Container>
       <Button variant="danger" className="mt-3" onClick={handleLogout}>Logout</Button>
-      <h2 className="mt-3">Welcome User</h2>
+      <h2 className="mt-3">Welcome {user ? user.first_name : 'Loading...'}</h2>
 
       <Form className="mt-3" onSubmit={handleAddBook}>
         <Form.Group controlId="formTitle">
@@ -98,7 +110,7 @@ function Books() {
 
           <Row className="mt-3">
             {books.map((book) => (
-              <Col sm={12} md={6} lg={4} key={book.book_id} className="mb-3">
+              <Col sm={4} md={3} lg={2} key={book.book_id} className="mb-3">
                 <Card>
                   <Card.Body>
                     <Card.Title>{book.title}</Card.Title>

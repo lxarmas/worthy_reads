@@ -1,29 +1,27 @@
 const express = require('express');
 const bodyParser = require('body-parser');
-const session = require('express-session'); 
-const crypto = require('crypto'); 
+const session = require('express-session');
+const crypto = require('crypto');
 const axios = require('axios');
 const { Client } = require('pg');
-const cors = require('cors');  // Add this line
+const cors = require('cors');
 const path = require('path');
 
 const app = express();
 const port = 3000;
 
-// Generate a random secret key
 const secretKey = crypto.randomBytes(32).toString('hex');
 
-// Configure express-session middleware with the secret key
 app.use(session({
   secret: secretKey,
   resave: false,
   saveUninitialized: false
 }));
 
-app.use(cors({ origin: 'http://localhost:3001', credentials: true }));  // Add this line
+app.use(cors({ origin: 'http://localhost:3001', credentials: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(bodyParser.json());  // Add this line to handle JSON payloads
+app.use(bodyParser.json());
 
 const client = new Client({
   user: process.env.DB_USER || 'postgres',
@@ -42,6 +40,20 @@ app.get('/api/books/:userId', async (req, res) => {
     const user_id = req.params.userId;
     const dbData = await fetchDataFromDatabase(user_id);
     res.json(dbData);
+  } catch (error) {
+    handleError(res, error);
+  }
+});
+
+app.get('/api/users/:userId', async (req, res) => {
+  const userId = req.params.userId;
+  try {
+    const result = await client.query('SELECT first_name FROM users WHERE user_id = $1', [userId]);
+    if (result.rows.length > 0) {
+      res.json(result.rows[0]);
+    } else {
+      res.status(404).json({ message: 'User not found' });
+    }
   } catch (error) {
     handleError(res, error);
   }
@@ -72,7 +84,7 @@ app.post('/api/login', async (req, res) => {
       const storedPassword = user.password;
       if (password === storedPassword) {
         const user_id = user.user_id;
-        req.session.user_id = user_id;  // Set the session user_id
+        req.session.user_id = user_id;
         res.json({ user_id });
       } else {
         res.status(400).json({ message: 'Incorrect Password' });
@@ -119,7 +131,7 @@ async function fetchDataFromDatabase(user_id) {
     return dbData;
   } catch (error) {
     console.error('Error fetching data from database:', error);
-    throw error; // Rethrow the error to handle it in the calling function
+    throw error;
   }
 }
 
