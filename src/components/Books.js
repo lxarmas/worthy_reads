@@ -4,6 +4,9 @@ import axios from 'axios';
 import { Button, Form, Alert, Card, Container, Row, Col, Spinner } from 'react-bootstrap';
 import BookCount from './BookCount';
 import BookDescription from './BookDescription.js';
+import './Books.css';
+
+
 
 function Books() {
   const [books, setBooks] = useState([]);
@@ -90,7 +93,10 @@ function Books() {
   return (
     <Container>
       <Button variant="danger" className="mt-3" onClick={handleLogout}>Logout</Button>
-      <h2 className="mt-3">Welcome {user ? user.first_name : 'Loading...'}</h2>
+      <h2 className="username-color">
+  Welcome {user ? `${user.first_name.charAt(0).toUpperCase()}${user.first_name.slice(1)}` : "Loading..."}
+</h2>
+
 
       <Form className="mt-3" onSubmit={handleAddBook}>
         <Form.Group controlId="formTitle">
@@ -116,7 +122,16 @@ function Books() {
         <Button variant="primary" type="submit" className="mt-3">Add Book</Button>
       </Form>
 
-      <h2 className="mt-4">Total Books</h2>
+     
+<h2 className="mt-4">
+  Total Books you have read: 
+  {user ? (
+    <span className="username-color">
+      {`${user.first_name.charAt(0).toUpperCase()}${user.first_name.slice(1)}`}
+    </span>
+  ) : 'Loading...'}
+</h2>
+
       
       {/* Use BookCount component */}
       <BookCount count={bookCount || books.length} />
