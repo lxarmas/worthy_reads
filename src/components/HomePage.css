@@ -1,18 +1,18 @@
-body {
+/* body {
     font-family: 'Arial', sans-serif;
     line-height: 1.6;
     color: #333;
-}
+} */
 
-.intro-home{
+/* .intro-home{
   font-size: 3em;
   font-family: Arial, Helvetica, sans-serif;
   color:rgb(0, 0, 0);
   font-weight:lighter;
   margin-left: 1em;
-}
+} */
 
-.home-background {
+/* .home-background {
     position: absolute;
     top: 0;
     left: 0;
@@ -24,4 +24,4 @@ body {
     opacity: 0.8;
     animation: fadeIn 2s ease-in-out forwards;
     z-index: -1; /* Ensure the background is behind other content */
-  }
+  /* }  */

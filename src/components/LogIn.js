@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { loginUser } from '../api';
+import Nav from './Nav';
 
 function LogIn() {
   const [email, setEmail] = useState('');
@@ -26,6 +27,7 @@ function LogIn() {
 
   return (
     <div className="container mt-5">
+      <Nav/>
       <h1 className="text-center">Log In</h1>
       <div className="row justify-content-center">
         <div className="col-md-6">

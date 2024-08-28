@@ -1,9 +1,11 @@
 
 import './HomePage.css'
+import Nav from './Nav';
 
 function HomePage() {
 return (
-<main>
+<main className="container mt-5">
+  <Nav/>
 <div className="jumbotron text-center">
   <div className="container">
     <div className="book-icon">
