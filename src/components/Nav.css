@@ -1,22 +1,22 @@
 /* Navigation */
 .nav {
-    background-color:#266759; /* Darker background for modern look */
-    padding: 1em 2em; /* Increased padding for more breathing room */
-    display: grid;
-    grid-template-columns: 1fr 3fr; /* Adjusted grid layout */
-    align-items: center;
+    background-color: #456a62; /* Darker background for modern look */
+    padding: 1em 4em; /* Adjusted padding for better centering */
+    display: flex;
+    justify-content: center; /* Center the nav items horizontally */
+    align-items: center; /* Center nav items vertically */
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
     border-radius: 8px; /* Rounded corners */
+    margin: 0 auto; /* Center the nav bar horizontally */
 }
 
 .nav-links {
     list-style: none;
     padding: 0;
     display: flex;
-    justify-content: flex-end; /* Align links to the right */
-    grid-column: 2/3;
-    gap: 1.5em; /* Space between links */
-    margin: 0; /* Removed bottom margin */
+    justify-content: center; /* Center links horizontally */
+    gap: 2em; /* Space between links */
+    margin: 0; /* Remove bottom margin */
 }
 
 .nav-links li {
@@ -33,7 +33,7 @@
 }
 
 .nav-links li a:hover {
-    color: #00bfa6; /* Accent color on hover */
+    color: #598a7f;; /* Accent color on hover */
 }
 
 .nav-links li::after {
@@ -41,7 +41,7 @@
     position: absolute;
     width: 0;
     height: 2px;
-    background-color: #00bfa6; /* Accent underline on hover */
+    background-color:#456a62; /* Accent underline on hover */
     left: 50%;
     bottom: -4px;
     transition: width 0.3s ease, left 0.3s ease;
@@ -55,15 +55,15 @@
 /* Responsive Design */
 @media (max-width: 768px) {
     .nav {
-        grid-template-columns: 1fr; /* Single column on small screens */
+        padding: 1em 2em; /* Reduced padding on small screens */
     }
 
     .nav-links {
-        justify-content: center; /* Center links on small screens */
+        flex-direction: column; /* Stack links vertically on small screens */
+        gap: 1em; /* Reduced gap for mobile */
     }
 
     .nav-links li a {
         font-size: 1rem; /* Smaller font size on mobile */
     }
 }
-

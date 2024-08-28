@@ -100,7 +100,7 @@ function Books() {
 </h2>
 
 
-      <Form className="mt-3" onSubmit={handleAddBook}>
+      <Form className="book-card"onSubmit={handleAddBook}>
         <Form.Group controlId="formTitle">
           <Form.Label>Title:</Form.Label>
           <Form.Control
@@ -128,8 +128,12 @@ function Books() {
 <h2 className="mt-4">
   Total Books you have read: 
   {user ? (
-    <span className="username-color">
-      {`${user.first_name.charAt(0).toUpperCase()}${user.first_name.slice(1)}`}
+    <span className="">
+      <span>
+            {bookCount || books.length} {/* Display the book count */}
+    
+     
+          </span>
     </span>
   ) : 'Loading...'}
 </h2>

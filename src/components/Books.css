@@ -1,4 +1,18 @@
 .username-color {
     color:#007659;
+    margin-left: 20rem;
   }
-  
+  .book-card {
+    border: 3px solid rgb(92, 91, 91);
+    padding: 40px; /* Increased padding for more space */
+    margin: 30px auto; /* Increased margin for better centering */
+    width: 600px; /* Increased width for more space */
+    text-align: center;
+    border-radius: 50px; /* Increased border radius for a more rounded appearance */
+    background-image: url('../../public/images/marbled-8050572_1280.png');
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Increased shadow for depth effect */
+    display: flex;
+    flex-direction: column;
+    justify-content: center; /* Align children vertically */
+    align-items: center; /* Align children horizontally */
+  }
