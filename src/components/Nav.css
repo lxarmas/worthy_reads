@@ -6,8 +6,13 @@
     justify-content: center; /* Center the nav items horizontally */
     align-items: center; /* Center nav items vertically */
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
-    border-radius: 8px; /* Rounded corners */
-    margin: 0 auto; /* Center the nav bar horizontally */
+    border-radius: 0; /* Remove border radius for full-width effect */
+    width: 100%; /* Ensure the nav bar spans the full width */
+    margin: 0; /* Remove auto margin to allow full-width */
+    position: fixed; /* Fix the nav bar at the top of the screen */
+    top: 0;
+    left: 0;
+    z-index: 1000; /* Ensure the nav bar stays on top */
 }
 
 .nav-links {
@@ -33,7 +38,7 @@
 }
 
 .nav-links li a:hover {
-    color: #598a7f;; /* Accent color on hover */
+    color: #598a7f; /* Accent color on hover */
 }
 
 .nav-links li::after {
@@ -41,7 +46,7 @@
     position: absolute;
     width: 0;
     height: 2px;
-    background-color:#456a62; /* Accent underline on hover */
+    background-color: #598a7f; /* Accent underline on hover */
     left: 50%;
     bottom: -4px;
     transition: width 0.3s ease, left 0.3s ease;

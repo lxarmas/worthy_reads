@@ -1,18 +1,73 @@
+/* Main Page Content (book.css) */
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: Arial, sans-serif;
+  background-color: #f5f5f5; /* Light background for contrast */
+  padding-top: 70px; /* Make sure this matches your nav bar's height */
+}
+
 .username-color {
-    color:#007659;
-    margin-left: 20rem;
-  }
+  color: #007659;
+  margin-left: 20rem;
+}
+
+.book-card {
+  border: 3px solid rgb(92, 91, 91);
+  padding: 40px;
+  margin: 30px auto;
+  width: 600px;
+  text-align: center;
+  border-radius: 50px;
+  background-image: url('../../public/images/marbled-8050572_1280.png');
+  background-size: cover; /* Ensure the background image covers the card fully */
+  background-position: center; /* Center the background image */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.text-center {
+  color: rgb(1, 57, 0);
+  font-size: 1.5rem; /* Adjust font size for better readability */
+  margin-bottom: 20px; /* Space below the text */
+}
+
+/* Add additional styling to match modern aesthetics */
+h1, h2, h3, h4, h5, h6 {
+  color: #456a62;
+  font-weight: 700;
+  margin-bottom: 20px;
+}
+
+/* Button styling */
+button {
+  background-color: #456a62;
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+button:hover {
+  background-color: #598a7f;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
   .book-card {
-    border: 3px solid rgb(92, 91, 91);
-    padding: 40px; /* Increased padding for more space */
-    margin: 30px auto; /* Increased margin for better centering */
-    width: 600px; /* Increased width for more space */
-    text-align: center;
-    border-radius: 50px; /* Increased border radius for a more rounded appearance */
-    background-image: url('../../public/images/marbled-8050572_1280.png');
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Increased shadow for depth effect */
-    display: flex;
-    flex-direction: column;
-    justify-content: center; /* Align children vertically */
-    align-items: center; /* Align children horizontally */
+    width: 90%; /* Adjust width for smaller screens */
+    margin: 20px;
+    padding: 20px;
   }
+
+  .username-color {
+    margin-left: 0;
+    text-align: center;
+  }
+}
