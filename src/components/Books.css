@@ -8,10 +8,7 @@ body {
   padding-top: 70px; /* Make sure this matches your nav bar's height */
 }
 
-.username-color {
-  color: #007659;
-  margin-left: 20rem;
-}
+
 
 .book-card {
   border: 3px solid rgb(92, 91, 91);
@@ -66,10 +63,9 @@ button:hover {
     padding: 20px;
   }
 
-  .username-color {
-    margin-left: 0;
-    text-align: center;
-  }
+
+
+
 }
 
 .test{
@@ -78,5 +74,44 @@ button:hover {
 
 
 
+/* Container to center the content */
+.center-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh; /* Full height of the viewport */
+  width: 100vw; /* Full width of the viewport */
+  position: fixed; /* Stay in place even when scrolling */
+  top: 0;
+  left: 0;
+}
 
+/* Enhanced Username Animation */
+.username-color {
+  color: #456a62;
+  opacity: 0; /* Initially hidden */
+  transform: translateY(-30px) scale(0.9); /* Start 30px above and slightly smaller */
+  animation: fadeInBounce 1.5s ease-out forwards; /* Apply the enhanced animation */
+  font-size: 2.5rem; /* Slightly larger font size */
+  text-align: center; /* Center the text */
+  animation-fill-mode: forwards; /* Keep the final state after the animation */
+}
 
+/* Keyframes for the fade, slide-in, and bounce effect */
+@keyframes fadeInBounce {
+  0% {
+    opacity: 0;
+    transform: translateY(-30px) scale(0.9); /* Start offscreen above and scaled down */
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(10px) scale(1.1); /* Slightly overshoot for bounce */
+  }
+  80% {
+    transform: translateY(-5px) scale(1.05); /* Bounce back up */
+  }
+  100% {
+    transform: translateY(0) scale(1); /* End at natural position */
+    opacity: 1; /* Ensure opacity is fully visible */
+  }
+}
