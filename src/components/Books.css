@@ -68,10 +68,6 @@ button:hover {
 
 }
 
-.test{
- color:red;/* Ensure description is above other elements */
-}
-
 
 
 /* Container to center the content */
@@ -114,4 +110,29 @@ button:hover {
     transform: translateY(0) scale(1); /* End at natural position */
     opacity: 1; /* Ensure opacity is fully visible */
   }
+}
+.book-description-pop {
+  position: absolute; /* Position the pop-up relative to the card */
+  top: 0;
+  left: 100%; /* Position to the right of the card */
+  margin-left: 10px; /* Add some space between the card and pop-up */
+  background-color: #d9ffc2; /* White background for readability */
+  border: 1px solid #ccc; /* Light border for definition */
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+  padding: 10px; /* Padding inside the pop-up */
+  z-index: 100; /* Ensure it appears above other elements */
+  width: 250px; /* Set a fixed width */
+  max-height: 200px; /* Limit the height */
+  overflow-y: auto; /* Enable scrolling if the content is too long */
+  border-radius: 5px; /* Slightly rounded corners */
+}
+
+.book-description-content {
+  font-size: 0.9rem; /* Adjust the font size */
+  color: #333; /* Darker color for text */
+}
+img {
+  width: 100%;
+  height: auto;
+  object-fit: cover;
 }

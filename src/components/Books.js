@@ -1,26 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { Button, Form, Alert, Card, Container, Row, Col, Spinner } from 'react-bootstrap';
 import BookCount from './BookCount';
 import BookDescription from './BookDescription.js';
 import Nav from './Nav';
-
 import './Books.css';
-
-
 
 function Books() {
   const [books, setBooks] = useState([]);
   const [title, setTitle] = useState('');
   const [author, setAuthor] = useState('');
-  const [userId] = useState(localStorage.getItem('userId')); // Ensure this is set during login
-  const [user, setUser] = useState(null); // State for user data
-  const [error, setError] = useState(null); // For displaying errors
-  const [loading, setLoading] = useState(true); // Loading state
-  const [bookCount, setBookCount] = useState(0); // State for book count
-  const [selectedBookId, setSelectedBookId] = useState(null); // Track selected book ID
-
+  const [userId] = useState(localStorage.getItem('userId')); 
+  const [user, setUser] = useState(null); 
+  const [error, setError] = useState(null); 
+  const [loading, setLoading] = useState(true); 
+  const [bookCount, setBookCount] = useState(0); 
+  const [selectedBookId, setSelectedBookId] = useState(null); 
 
   useEffect(() => {
     const fetchBooks = async () => {
@@ -31,7 +26,7 @@ function Books() {
         console.error('Error fetching books:', error);
         setError('Failed to fetch books. Please try again.');
       } finally {
-        setLoading(false); // Stop loading
+        setLoading(false);
       }
     };
 
@@ -51,16 +46,12 @@ function Books() {
     }
   }, [userId]);
 
- 
   const handleAddBook = async (event) => {
     event.preventDefault();
     try {
       await axios.post('http://localhost:3000/api/books', { title, author, user_id: userId });
-  
-      // Re-fetch the list of books
       const response = await axios.get(`http://localhost:3000/api/books/${userId}`);
-      setBooks(response.data); // Update the books state with the latest data
-  
+      setBooks(response.data);
       setTitle('');
       setAuthor('');
     } catch (error) {
@@ -68,37 +59,32 @@ function Books() {
       setError('Failed to add book. Please try again.');
     }
   };
-  
-  
 
   const handleDeleteBook = async (bookId) => {
     try {
       const response = await axios.delete(`http://localhost:3000/api/books/${bookId}`);
       if (response.data.success) {
-        setBooks(prevBooks => prevBooks.filter(book => book.book_id !== bookId)); // Remove deleted book
-        setBookCount(response.data.bookCount); // Update the book count
+        setBooks(prevBooks => prevBooks.filter(book => book.book_id !== bookId));
+        setBookCount(response.data.bookCount);
       }
     } catch (error) {
       console.error('Error deleting book:', error);
-      setError('Failed to delete book. Please try again.'); // Display error
+      setError('Failed to delete book. Please try again.');
     }
   };
 
   const toggleDescription = (bookId) => {
-    setSelectedBookId(selectedBookId === bookId ? null : bookId); // Toggle visibility
+    setSelectedBookId(selectedBookId === bookId ? null : bookId);
   };
 
   return (
     <Container>
-   
-      <Nav/>
-     
+      <Nav />
       <h2 className="username-color">
-  Welcome {user ? `${user.first_name.charAt(0).toUpperCase()}${user.first_name.slice(1)}` : "Loading..."}
-</h2>
+        Welcome {user ? `${user.first_name.charAt(0).toUpperCase()}${user.first_name.slice(1)}` : "Loading..."}
+      </h2>
 
-
-      <Form className="book-card"onSubmit={handleAddBook}>
+      <Form className="book-card" onSubmit={handleAddBook}>
         <Form.Group controlId="formTitle">
           <Form.Label>Title:</Form.Label>
           <Form.Control
@@ -108,7 +94,6 @@ function Books() {
             required
           />
         </Form.Group>
-
         <Form.Group controlId="formAuthor" className="mt-2">
           <Form.Label>Author:</Form.Label>
           <Form.Control
@@ -118,26 +103,9 @@ function Books() {
             required
           />
         </Form.Group>
-
         <Button variant="primary" type="submit" className="mt-3">Add Book</Button>
       </Form>
 
-     
-<h2 className="mt-4">
-  Total Books you have read: 
-  {user ? (
-    <span className="">
-      <span>
-            {bookCount || books.length} {/* Display the book count */}
-    
-     
-          </span>
-    </span>
-  ) : 'Loading...'}
-</h2>
-
-      
-      {/* Use BookCount component */}
       <BookCount count={bookCount || books.length} />
 
       {loading ? (
@@ -145,20 +113,38 @@ function Books() {
       ) : (
         <>
           {error && <Alert variant="danger" className="mt-3">{error}</Alert>}
-
           <Row className="mt-3">
             {books.map((book) => (
-              <Col sm={4} md={3} lg={2} key={book.book_id} className="mb-3">
-                <Card onClick={() => toggleDescription(book.book_id)} style={{ cursor: 'pointer' }}>
-                  <Card.Body>
-                    <Card.Title>{book.title}</Card.Title>
-                    <Card.Subtitle className="mb-2 text-muted">By {book.author}</Card.Subtitle>
-                    {book.image_link && <Card.Img variant="top" src={book.image_link} alt={book.title} />}
-                    {selectedBookId === book.book_id && (
-                      <BookDescription className="test" description={book.description_book} />
-                    )}
-                    <Button variant="danger" onClick={() => handleDeleteBook(book.book_id)}>Delete</Button>
-                  </Card.Body>
+              <Col sm={6} md={4} lg={3} key={book.book_id} className="mb-3">
+                <Card className="book-container">
+                  <div className="book-details">
+                    <Card.Body onClick={() => toggleDescription(book.book_id)} style={{ cursor: 'pointer' }}>
+                      <Card.Title>{book.title}</Card.Title>
+                      <Card.Subtitle className="mb-2 text-muted">By {book.author}</Card.Subtitle>
+                      {book.image_link && (
+  <img
+    srcSet={`
+      ${book.image_link}-small.jpg 500w, 
+      ${book.image_link}-medium.jpg 1000w, 
+      ${book.image_link}-large.jpg 1500w, 
+      ${book.image_link}-xlarge.jpg 3000w
+    `}
+    sizes="(max-width: 600px) 500px, (max-width: 1200px) 1000px, 1500px"
+    src={`${book.image_link}-x-large.jpg`}
+    alt={book.title}
+    className="img-fluid"
+    style={{ width: '90%', height: 'auto', objectFit: 'cover' }}
+  />
+)}
+
+                      <Button variant="danger" onClick={() => handleDeleteBook(book.book_id)}>Delete</Button>
+                    </Card.Body>
+                  </div>
+                  {selectedBookId === book.book_id && (
+                    <div className="book-description-wrapper">
+                      <BookDescription description={book.description_book} />
+                    </div>
+                  )}
                 </Card>
               </Col>
             ))}
