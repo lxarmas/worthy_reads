@@ -20,7 +20,7 @@ function Books() {
   const [loading, setLoading] = useState(true); // Loading state
   const [bookCount, setBookCount] = useState(0); // State for book count
   const [selectedBookId, setSelectedBookId] = useState(null); // Track selected book ID
-  const navigate = useNavigate();
+
 
   useEffect(() => {
     const fetchBooks = async () => {
@@ -51,11 +51,7 @@ function Books() {
     }
   }, [userId]);
 
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('userId'); // Clear userId on logout
-    navigate('/login');
-  };
+ 
   const handleAddBook = async (event) => {
     event.preventDefault();
     try {
@@ -96,7 +92,7 @@ function Books() {
     <Container>
    
       <Nav/>
-      <Button variant="danger" className="mt-3" onClick={handleLogout}>Logout</Button>
+     
       <h2 className="username-color">
   Welcome {user ? `${user.first_name.charAt(0).toUpperCase()}${user.first_name.slice(1)}` : "Loading..."}
 </h2>

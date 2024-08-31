@@ -1,27 +1,27 @@
 /* Navigation */
 .nav {
-    background-color: #456a62; /* Darker background for modern look */
-    padding: 1em 4em; /* Adjusted padding for better centering */
+    background-color: #456a62;
+    padding: 1em 4em;
     display: flex;
-    justify-content: center; /* Center the nav items horizontally */
-    align-items: center; /* Center nav items vertically */
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
-    border-radius: 0; /* Remove border radius for full-width effect */
-    width: 100%; /* Ensure the nav bar spans the full width */
-    margin: 0; /* Remove auto margin to allow full-width */
-    position: fixed; /* Fix the nav bar at the top of the screen */
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    border-radius: 0;
+    width: 100%;
+    margin: 0;
+    position: fixed;
     top: 0;
     left: 0;
-    z-index: 1000; /* Ensure the nav bar stays on top */
+    z-index: 1000;
 }
 
 .nav-links {
     list-style: none;
     padding: 0;
     display: flex;
-    justify-content: center; /* Center links horizontally */
-    gap: 2em; /* Space between links */
-    margin: 0; /* Remove bottom margin */
+    justify-content: center;
+    gap: 2em;
+    margin: 0;
 }
 
 .nav-links li {
@@ -29,16 +29,22 @@
     position: relative;
 }
 
-.nav-links li a {
+.nav-links li a,
+.nav-links li button { /* Apply styles to both links and buttons */
     text-decoration: none;
-    color: #f0f0f0; /* Light color for contrast */
+    color: #f0f0f0;
     font-weight: bold;
-    font-size: 1.2rem; /* Adjusted font size */
-    transition: color 0.3s ease; /* Smooth color transition */
+    font-size: 1.2rem;
+    transition: color 0.3s ease;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
 }
 
-.nav-links li a:hover {
-    color: #598a7f; /* Accent color on hover */
+.nav-links li a:hover,
+.nav-links li button:hover {
+    color: #598a7f;
 }
 
 .nav-links li::after {
@@ -46,7 +52,7 @@
     position: absolute;
     width: 0;
     height: 2px;
-    background-color: #598a7f; /* Accent underline on hover */
+    background-color: #598a7f;
     left: 50%;
     bottom: -4px;
     transition: width 0.3s ease, left 0.3s ease;
@@ -60,15 +66,16 @@
 /* Responsive Design */
 @media (max-width: 768px) {
     .nav {
-        padding: 1em 2em; /* Reduced padding on small screens */
+        padding: 1em 2em;
     }
 
     .nav-links {
-        flex-direction: column; /* Stack links vertically on small screens */
-        gap: 1em; /* Reduced gap for mobile */
+        flex-direction: column;
+        gap: 1em;
     }
 
-    .nav-links li a {
-        font-size: 1rem; /* Smaller font size on mobile */
+    .nav-links li a,
+    .nav-links li button {
+        font-size: 1rem;
     }
 }
