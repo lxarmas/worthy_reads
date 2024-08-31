@@ -159,7 +159,7 @@ function Books() {
                     <Card.Subtitle className="mb-2 text-muted">By {book.author}</Card.Subtitle>
                     {book.image_link && <Card.Img variant="top" src={book.image_link} alt={book.title} />}
                     {selectedBookId === book.book_id && (
-                      <BookDescription description={book.description_book} />
+                      <BookDescription className="test" description={book.description_book} />
                     )}
                     <Button variant="danger" onClick={() => handleDeleteBook(book.book_id)}>Delete</Button>
                   </Card.Body>
