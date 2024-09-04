@@ -11,9 +11,13 @@ body {
 .book-categories {
   margin-top: 10px;
   font-size: 0.9em;
-  color: #6c757d; /* Bootstrap text-muted color */
+  color: #1d3731;
 }
-
+.book-details{
+  color: #404040;
+  background-color: rgb(226, 226, 226);
+ 
+}
 
 .book-card {
   border: 3px solid rgb(92, 91, 91);
@@ -89,10 +93,10 @@ button:hover {
 
 /* Enhanced Username Animation */
 .username-color {
-  color: #456a62;
+  margin-top: 1rem;
   opacity: 0; /* Initially hidden */
   transform: translateY(-30px) scale(0.9); /* Start 30px above and slightly smaller */
-  animation: fadeInBounce 1.5s ease-out forwards; /* Apply the enhanced animation */
+  animation: fadeInBounce 1.5s ease-out forwards, colorChange 3s ease-in-out infinite; /* Enhanced with color change */
   font-size: 2.5rem; /* Slightly larger font size */
   text-align: center; /* Center the text */
   animation-fill-mode: forwards; /* Keep the final state after the animation */
@@ -116,6 +120,26 @@ button:hover {
     opacity: 1; /* Ensure opacity is fully visible */
   }
 }
+
+/* Keyframes for changing color */
+@keyframes colorChange {
+  0% {
+    color: #456a62; /* Start color */
+  }
+  25% {
+    color: #4a7d71; /* Change color */
+  }
+  50% {
+    color: #51a08a; /* Change color again */
+  }
+  75% {
+    color: #69b8a1; /* Another color */
+  }
+  100% {
+    color: #456a62; /* Return to start color */
+  }
+}
+
 .book-description-pop {
   position: absolute; /* Position the pop-up relative to the card */
   top: 0;

@@ -120,7 +120,7 @@ function Books() {
                   <div className="book-details">
                     <Card.Body onClick={() => toggleDescription(book.book_id)} style={{ cursor: 'pointer' }}>
                       <Card.Title>{book.title}</Card.Title>
-                      <Card.Subtitle className="mb-2 text-muted">By {book.author}</Card.Subtitle>
+                      <Card.Subtitle className="author-name">By {book.author}</Card.Subtitle>
                       
                       {/* Display categories */}
                       {book.categories && book.categories.length > 0 && (
@@ -142,7 +142,7 @@ function Books() {
                           src={`${book.image_link}-x-large.jpg`}
                           alt={book.title}
                           className="img-fluid"
-                          style={{ width: '90%', height: 'auto', objectFit: 'cover' }}
+                          style={{ width: '70%', height: 'auto', objectFit: 'cover' }}
                         />
                       )}
 
