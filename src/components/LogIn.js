@@ -18,6 +18,7 @@ function LogIn() {
       console.log('Login successful:', response);
       // Store the user ID instead of token
       localStorage.setItem('userId', response.data.user_id);
+    
       navigate('/books'); // Redirect to books page after successful login
     } catch (error) {
       console.error('Login error:', error.response ? error.response.data : error.message);

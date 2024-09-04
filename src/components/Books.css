@@ -8,6 +8,11 @@ body {
   padding-top: 70px; /* Make sure this matches your nav bar's height */
 }
 
+.book-categories {
+  margin-top: 10px;
+  font-size: 0.9em;
+  color: #6c757d; /* Bootstrap text-muted color */
+}
 
 
 .book-card {

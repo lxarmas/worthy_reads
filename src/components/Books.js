@@ -121,21 +121,30 @@ function Books() {
                     <Card.Body onClick={() => toggleDescription(book.book_id)} style={{ cursor: 'pointer' }}>
                       <Card.Title>{book.title}</Card.Title>
                       <Card.Subtitle className="mb-2 text-muted">By {book.author}</Card.Subtitle>
+                      
+                      {/* Display categories */}
+                      {book.categories && book.categories.length > 0 && (
+                        <div className="book-categories">
+                          <strong>Categories: </strong>
+                          {book.categories.join(', ')}
+                        </div>
+                      )}
+
                       {book.image_link && (
-  <img
-    srcSet={`
-      ${book.image_link}-small.jpg 500w, 
-      ${book.image_link}-medium.jpg 1000w, 
-      ${book.image_link}-large.jpg 1500w, 
-      ${book.image_link}-xlarge.jpg 3000w
-    `}
-    sizes="(max-width: 600px) 500px, (max-width: 1200px) 1000px, 1500px"
-    src={`${book.image_link}-x-large.jpg`}
-    alt={book.title}
-    className="img-fluid"
-    style={{ width: '90%', height: 'auto', objectFit: 'cover' }}
-  />
-)}
+                        <img
+                          srcSet={`
+                            ${book.image_link}-small.jpg 500w, 
+                            ${book.image_link}-medium.jpg 1000w, 
+                            ${book.image_link}-large.jpg 1500w, 
+                            ${book.image_link}-xlarge.jpg 3000w
+                          `}
+                          sizes="(max-width: 600px) 500px, (max-width: 1200px) 1000px, 1500px"
+                          src={`${book.image_link}-x-large.jpg`}
+                          alt={book.title}
+                          className="img-fluid"
+                          style={{ width: '90%', height: 'auto', objectFit: 'cover' }}
+                        />
+                      )}
 
                       <Button variant="danger" onClick={() => handleDeleteBook(book.book_id)}>Delete</Button>
                     </Card.Body>

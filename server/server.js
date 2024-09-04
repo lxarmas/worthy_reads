@@ -39,6 +39,7 @@ app.get('/api/books/:userId', async (req, res) => {
   try {
     const user_id = req.params.userId;
     const dbData = await fetchDataFromDatabase(user_id);
+    console.log ("testing",dbData)
     res.json(dbData);
   } catch (error) {
     handleError(res, error);
@@ -100,20 +101,27 @@ app.post('/api/login', async (req, res) => {
 app.post('/api/books', async (req, res) => {
   const { title, author, user_id } = req.body;
   try {
-    const bookData = await fetchBookData(title, author, user_id);
+    const bookData = await fetchBookData(title, author);
     if (!bookData) {
       res.status(404).json({ message: 'Book not found' });
       return;
     }
     const thumbnailUrl = bookData.volumeInfo.imageLinks ? bookData.volumeInfo.imageLinks.thumbnail : null;
     const descriptionBook = bookData.volumeInfo.description ? bookData.volumeInfo.description : '';
-    await client.query('INSERT INTO books (title, author, image_link, user_id, description_book) VALUES ($1, $2, $3, $4, $5)', [title, author, thumbnailUrl, user_id, descriptionBook]);
+    const categories = bookData.categories;
+
+    await client.query(
+      'INSERT INTO books (title, author, image_link, user_id, description_book, categories) VALUES ($1, $2, $3, $4, $5, $6)',
+      [title, author, thumbnailUrl, user_id, descriptionBook, categories]
+    );
+
     const dbData = await fetchDataFromDatabase(user_id);
     res.status(201).json(dbData);
   } catch (error) {
     handleError(res, error);
   }
 });
+
 
 app.delete('/api/books/:book_id', async (req, res) => {
   const bookId = req.params.book_id;
@@ -160,17 +168,18 @@ async function fetchBookData(title, author) {
       console.error('No books found for the given search criteria');
       return null;
     }
-    return items[0];
+    const bookData = items[0];
+    return {
+      ...bookData,
+      categories: bookData.volumeInfo.categories || []
+    };
   } catch (error) {
     console.error('Error fetching book data:', error);
     return null;
   }
 }
 
-function handleError(res, error) {
-  console.error('Error:', error);
-  res.status(500).json({ error: 'Internal Server Error' });
-}
+
 
 app.listen(port, () => {
   console.log(`Server is running on http://localhost:${port}`);
