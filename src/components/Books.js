@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Button, Form, Alert, Card, Container, Row, Col, Spinner } from 'react-bootstrap';
+import Rating from 'react-rating';
 import BookCount from './BookCount';
 import BookDescription from './BookDescription.js';
 import Nav from './Nav';
@@ -73,6 +74,19 @@ function Books() {
     }
   };
 
+  const handleRatingChange = async (bookId, rate) => {
+    try {
+      await axios.put( `http://localhost:3000/api/books/${bookId}/rating`, { rating: rate } );
+      // Optionally, update the book's rating in the state
+      
+      setBooks( books.map( book => 
+        book.book_id === bookId ? { ...book, rating: rate } : book
+      ));
+    } catch (error) {
+      console.error('Error updating rating:', error);
+    }
+  };
+
   const toggleDescription = (bookId) => {
     setSelectedBookId(selectedBookId === bookId ? null : bookId);
   };
@@ -121,7 +135,7 @@ function Books() {
                     <Card.Body onClick={() => toggleDescription(book.book_id)} style={{ cursor: 'pointer' }}>
                       <Card.Title>{book.title}</Card.Title>
                       <Card.Subtitle className="author-name">By {book.author}</Card.Subtitle>
-                      
+
                       {/* Display categories */}
                       {book.categories && book.categories.length > 0 && (
                         <div className="book-categories">
@@ -147,6 +161,18 @@ function Books() {
                       )}
 
                       <Button variant="danger" onClick={() => handleDeleteBook(book.book_id)}>Delete</Button>
+
+                      {/* Add Rating Component */}
+                     <Rating
+                    initialRating={book.rating || 0}
+                     onChange={(rate) => {
+    console.log('Selected Rating:', rate); // Debugging: Log the selected rating
+    handleRatingChange(book.book_id, rate);
+  }}
+  emptySymbol="fa fa-star-o fa-2x"
+  fullSymbol="fa fa-star fa-2x"
+/>
+
                     </Card.Body>
                   </div>
                   {selectedBookId === book.book_id && (
