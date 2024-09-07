@@ -122,6 +122,26 @@ app.post('/api/books', async (req, res) => {
   }
 });
 
+app.put('/api/books/:id/rating', async (req, res) => {
+  const { id } = req.params;  // Check if the `id` param is correctly parsed
+  const { rating } = req.body;  // Ensure `rating` is passed in the request body
+
+  try {
+    const result = await client.query(
+      'UPDATE books SET rating = $1 WHERE book_id = $2 RETURNING *',
+      [rating, id]
+    );
+    if (result.rows.length > 0) {
+      res.json(result.rows[0]);
+    } else {
+      res.status(404).json({ message: 'Book not found' });
+    }
+  } catch (error) {
+    console.error('Error updating rating:', error);
+    res.status(500).send('Error updating rating');
+  }
+});
+
 
 app.delete('/api/books/:book_id', async (req, res) => {
   const bookId = req.params.book_id;

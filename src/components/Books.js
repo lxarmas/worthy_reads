@@ -6,6 +6,7 @@ import BookCount from './BookCount';
 import BookDescription from './BookDescription.js';
 import Nav from './Nav';
 import './Books.css';
+import { motion } from "framer-motion";
 
 function Books() {
   const [books, setBooks] = useState([]);
@@ -75,11 +76,12 @@ function Books() {
   };
 
   const handleRatingChange = async (bookId, rate) => {
+    console.log(`Book ID: ${bookId}, Rating: ${rate}`); // Log bookId and rate
+
     try {
-      await axios.put( `http://localhost:3000/api/books/${bookId}/rating`, { rating: rate } );
-      // Optionally, update the book's rating in the state
+      await axios.put(`http://localhost:3001/api/books/${bookId}/rating`, { rating: rate });
       
-      setBooks( books.map( book => 
+      setBooks(books.map(book => 
         book.book_id === bookId ? { ...book, rating: rate } : book
       ));
     } catch (error) {
@@ -147,9 +149,9 @@ function Books() {
                       {book.image_link && (
                         <img
                           srcSet={`
-                            ${book.image_link}-small.jpg 500w, 
-                            ${book.image_link}-medium.jpg 1000w, 
-                            ${book.image_link}-large.jpg 1500w, 
+                            ${book.image_link}-small.jpg 500w,
+                            ${book.image_link}-medium.jpg 1000w,
+                            ${book.image_link}-large.jpg 1500w,
                             ${book.image_link}-xlarge.jpg 3000w
                           `}
                           sizes="(max-width: 600px) 500px, (max-width: 1200px) 1000px, 1500px"
@@ -163,16 +165,29 @@ function Books() {
                       <Button variant="danger" onClick={() => handleDeleteBook(book.book_id)}>Delete</Button>
 
                       {/* Add Rating Component */}
-                     <Rating
-                    initialRating={book.rating || 0}
-                     onChange={(rate) => {
-    console.log('Selected Rating:', rate); // Debugging: Log the selected rating
-    handleRatingChange(book.book_id, rate);
-  }}
-  emptySymbol="fa fa-star-o fa-2x"
-  fullSymbol="fa fa-star fa-2x"
-/>
-
+                      <Rating
+                        initialRating={book.rating || 0}
+                        onChange={(rate) => {
+                          console.log('Selected Rating:', rate); // Debugging: Log the selected rating
+                          handleRatingChange(book.book_id, rate);
+                        }}
+                        emptySymbol={
+                          <motion.i
+                            className="fa fa-star-o fa-2x shaded-star"
+                            whileHover={{ scale: 1.3, rotate: 15, boxShadow: "0px 6px 12px rgba(0, 0, 0, 0.5)" }}
+                            whileTap={{ scale: 1.5, rotate: 0 }}
+                            style={{ color: "lightgray" }}
+                          />
+                        }
+                        fullSymbol={
+                          <motion.i
+                            className="fa fa-star fa-2x shaded-star"
+                            whileHover={{ scale: 1.3, rotate: 15, boxShadow: "0px 6px 12px rgba(255, 204, 0, 0.8)" }}
+                            whileTap={{ scale: 1.5, rotate: 0 }}
+                            style={{ color: "gold" }}
+                          />
+                        }
+                      />
                     </Card.Body>
                   </div>
                   {selectedBookId === book.book_id && (
