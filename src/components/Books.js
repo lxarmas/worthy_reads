@@ -165,6 +165,7 @@ function Books() {
                       <Button variant="danger" onClick={() => handleDeleteBook(book.book_id)}>Delete</Button>
 
                       {/* Add Rating Component */}
+                    </Card.Body>
                       <Rating
                         initialRating={book.rating || 0}
                         onChange={(rate) => {
@@ -188,7 +189,6 @@ function Books() {
                           />
                         }
                       />
-                    </Card.Body>
                   </div>
                   {selectedBookId === book.book_id && (
                     <div className="book-description-wrapper">
