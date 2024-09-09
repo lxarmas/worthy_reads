@@ -106,10 +106,12 @@ app.post('/api/books', async (req, res) => {
       res.status(404).json({ message: 'Book not found' });
       return;
     }
+    
     const thumbnailUrl = bookData.volumeInfo.imageLinks ? bookData.volumeInfo.imageLinks.thumbnail : null;
     const descriptionBook = bookData.volumeInfo.description ? bookData.volumeInfo.description : '';
-    const categories = bookData.categories;
+    const categories = bookData.categories.length ? bookData.categories : ['Uncategorized']; // Handle case if no categories are returned
 
+    // Insert into the database
     await client.query(
       'INSERT INTO books (title, author, image_link, user_id, description_book, categories) VALUES ($1, $2, $3, $4, $5, $6)',
       [title, author, thumbnailUrl, user_id, descriptionBook, categories]
@@ -141,6 +143,7 @@ app.put('/api/books/:id/rating', async (req, res) => {
     res.status(500).send('Error updating rating');
   }
 });
+
 
 
 app.delete('/api/books/:book_id', async (req, res) => {
