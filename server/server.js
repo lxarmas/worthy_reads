@@ -123,15 +123,18 @@ app.post('/api/books', async (req, res) => {
     handleError(res, error);
   }
 });
-
 app.put('/api/books/:id/rating', async (req, res) => {
-  const { id } = req.params;  // Check if the `id` param is correctly parsed
-  const { rating } = req.body;  // Ensure `rating` is passed in the request body
+  const { id } = req.params;
+  const { rating } = req.body;
+  console.log('Received data:', { rating, id });
+
+  // Convert rating to integer (if needed)
+  const ratingInt = parseInt(rating, 10);
 
   try {
     const result = await client.query(
       'UPDATE books SET rating = $1 WHERE book_id = $2 RETURNING *',
-      [rating, id]
+      [ratingInt, id]
     );
     if (result.rows.length > 0) {
       res.json(result.rows[0]);
