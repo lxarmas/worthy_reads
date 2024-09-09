@@ -1,12 +1,12 @@
+// Books.js
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Button, Form, Alert, Card, Container, Row, Col, Spinner } from 'react-bootstrap';
-import Rating from 'react-rating';
+import Rating from './Rating'; // Import the new Rating component
 import BookCount from './BookCount';
-import BookDescription from './BookDescription.js';
+import BookDescription from './BookDescription';
 import Nav from './Nav';
 import './Books.css';
-import { motion } from "framer-motion";
 
 function Books() {
   const [books, setBooks] = useState([]);
@@ -163,7 +163,7 @@ function Books() {
                       )}
 
                       <Button variant="danger" onClick={() => handleDeleteBook(book.book_id)}>Delete</Button>
-
+                     
                       {/* Add Rating Component */}
                     </Card.Body>
                       <Rating
@@ -172,22 +172,6 @@ function Books() {
                           console.log('Selected Rating:', rate); // Debugging: Log the selected rating
                           handleRatingChange(book.book_id, rate);
                         }}
-                        emptySymbol={
-                          <motion.i
-                            className="fa fa-star-o fa-2x shaded-star"
-                            whileHover={{ scale: 1.3, rotate: 15, boxShadow: "0px 6px 12px rgba(0, 0, 0, 0.5)" }}
-                            whileTap={{ scale: 1.5, rotate: 0 }}
-                            style={{ color: "lightgray" }}
-                          />
-                        }
-                        fullSymbol={
-                          <motion.i
-                            className="fa fa-star fa-2x shaded-star"
-                            whileHover={{ scale: 1.3, rotate: 15, boxShadow: "0px 6px 12px rgba(255, 204, 0, 0.8)" }}
-                            whileTap={{ scale: 1.5, rotate: 0 }}
-                            style={{ color: "gold" }}
-                          />
-                        }
                       />
                   </div>
                   {selectedBookId === book.book_id && (
