@@ -79,7 +79,7 @@ function Books() {
     console.log(`Book ID: ${bookId}, Rating: ${rate}`); // Log bookId and rate
 
     try {
-      await axios.put(`http://localhost:3001/api/books/${bookId}/rating`, { rating: rate });
+      await axios.put(`http://localhost:3000/api/books/${bookId}/rating`, { rating: rate });
       
       setBooks(books.map(book => 
         book.book_id === bookId ? { ...book, rating: rate } : book
