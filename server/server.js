@@ -35,12 +35,36 @@ client.connect()
   .then(() => console.log('Connected to PostgreSQL database'))
   .catch(error => console.error('Error connecting to PostgreSQL database:', error));
 
+// Utility function to map Google Books API data to database format
+function mapToDatabaseFormat(apiData) {
+  return {
+    title: apiData.volumeInfo.title,
+    author: apiData.volumeInfo.authors ? apiData.volumeInfo.authors.join(', ') : 'Unknown Author', // Handle multiple authors
+    image_link: apiData.volumeInfo.imageLinks ? apiData.volumeInfo.imageLinks.thumbnail : null,
+    description_book: apiData.volumeInfo.description || '',
+    categories: apiData.volumeInfo.categories || ['Uncategorized'],
+    preview_link: apiData.volumeInfo.previewLink || '' // Ensure previewLink is mapped to preview_link
+  };
+}
+
+
+// Utility function to map database data to API format
+function mapToApiFormat(dbData) {
+  return dbData.map(book => ({
+    ...book,
+    previewLink: book.preview_link // Convert snake_case to camelCase
+  }));
+}
+
 app.get('/api/books/:userId', async (req, res) => {
   try {
     const user_id = req.params.userId;
     const dbData = await fetchDataFromDatabase(user_id);
-    console.log ("testing",dbData)
-    res.json(dbData);
+    
+    // Map snake_case fields to camelCase for the API response
+    const responseData = mapToApiFormat(dbData);
+    
+    res.json(responseData);
   } catch (error) {
     handleError(res, error);
   }
@@ -106,15 +130,11 @@ app.post('/api/books', async (req, res) => {
       res.status(404).json({ message: 'Book not found' });
       return;
     }
-    
-    const thumbnailUrl = bookData.volumeInfo.imageLinks ? bookData.volumeInfo.imageLinks.thumbnail : null;
-    const descriptionBook = bookData.volumeInfo.description ? bookData.volumeInfo.description : '';
-    const categories = bookData.categories.length ? bookData.categories : ['Uncategorized']; // Handle case if no categories are returned
 
     // Insert into the database
     await client.query(
-      'INSERT INTO books (title, author, image_link, user_id, description_book, categories) VALUES ($1, $2, $3, $4, $5, $6)',
-      [title, author, thumbnailUrl, user_id, descriptionBook, categories]
+      'INSERT INTO books (title, author, image_link, user_id, description_book, categories, preview_link) VALUES ($1, $2, $3, $4, $5, $6, $7)',
+      [bookData.title, bookData.author, bookData.image_link, user_id, bookData.description_book, bookData.categories, bookData.preview_link]
     );
 
     const dbData = await fetchDataFromDatabase(user_id);
@@ -123,6 +143,8 @@ app.post('/api/books', async (req, res) => {
     handleError(res, error);
   }
 });
+
+
 app.put('/api/books/:id/rating', async (req, res) => {
   const { id } = req.params;
   const { rating } = req.body;
@@ -146,8 +168,6 @@ app.put('/api/books/:id/rating', async (req, res) => {
     res.status(500).send('Error updating rating');
   }
 });
-
-
 
 app.delete('/api/books/:book_id', async (req, res) => {
   const bookId = req.params.book_id;
@@ -178,7 +198,7 @@ function handleError(res, error) {
 async function fetchDataFromDatabase(user_id) {
   try {
     const { rows: dbData } = await client.query('SELECT * FROM books WHERE user_id = $1', [user_id]);
-    return dbData;
+    return dbData; // Return raw data to be formatted later
   } catch (error) {
     console.error('Error fetching data from database:', error);
     throw error;
@@ -195,16 +215,13 @@ async function fetchBookData(title, author) {
       return null;
     }
     const bookData = items[0];
-    return {
-      ...bookData,
-      categories: bookData.volumeInfo.categories || []
-    };
+    console.log('API Data:', bookData); // Log the entire bookData to verify previewLink
+    return mapToDatabaseFormat(bookData); // Use the mapping function here
   } catch (error) {
     console.error('Error fetching book data:', error);
     return null;
   }
 }
-
 
 
 app.listen(port, () => {

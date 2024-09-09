@@ -1,4 +1,3 @@
-// Books.js
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Button, Form, Alert, Card, Container, Row, Col, Spinner } from 'react-bootstrap';
@@ -12,12 +11,12 @@ function Books() {
   const [books, setBooks] = useState([]);
   const [title, setTitle] = useState('');
   const [author, setAuthor] = useState('');
-  const [userId] = useState(localStorage.getItem('userId')); 
-  const [user, setUser] = useState(null); 
-  const [error, setError] = useState(null); 
-  const [loading, setLoading] = useState(true); 
-  const [bookCount, setBookCount] = useState(0); 
-  const [selectedBookId, setSelectedBookId] = useState(null); 
+  const [userId] = useState(localStorage.getItem('userId'));
+  const [user, setUser] = useState(null);
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [bookCount, setBookCount] = useState(0);
+  const [selectedBookId, setSelectedBookId] = useState(null);
 
   useEffect(() => {
     const fetchBooks = async () => {
@@ -76,11 +75,10 @@ function Books() {
   };
 
   const handleRatingChange = async (bookId, rate) => {
-    console.log(`Book ID: ${bookId}, Rating: ${rate}`); // Log bookId and rate
+    console.log(`Book ID: ${bookId}, Rating: ${rate}`);
 
     try {
       await axios.put(`http://localhost:3000/api/books/${bookId}/rating`, { rating: rate });
-      
       setBooks(books.map(book => 
         book.book_id === bookId ? { ...book, rating: rate } : book
       ));
@@ -137,6 +135,7 @@ function Books() {
                     <Card.Body onClick={() => toggleDescription(book.book_id)} style={{ cursor: 'pointer' }}>
                       <Card.Title>{book.title}</Card.Title>
                       <Card.Subtitle className="author-name">By {book.author}</Card.Subtitle>
+                      {console.log(book.previewLink)}
 
                       {/* Display categories */}
                       {book.categories && book.categories.length > 0 && (
@@ -163,16 +162,26 @@ function Books() {
                       )}
 
                       <Button variant="danger" onClick={() => handleDeleteBook(book.book_id)}>Delete</Button>
-                     
-                      {/* Add Rating Component */}
-                    </Card.Body>
+
+                   
                       <Rating
                         initialRating={book.rating || 0}
-                        onChange={(rate) => {
-                          console.log('Selected Rating:', rate); // Debugging: Log the selected rating
-                          handleRatingChange(book.book_id, rate);
-                        }}
+                        onChange={(rate) => handleRatingChange(book.book_id, rate)}
                       />
+{book.previewLink ? (
+  <Button
+    variant="info"
+    className="mt-2"
+    onClick={() => window.open(book.previewLink, '_blank')}
+  >
+    Preview
+  </Button>
+) : (
+  <p>No preview available</p>
+)}
+
+                      
+                    </Card.Body>
                   </div>
                   {selectedBookId === book.book_id && (
                     <div className="book-description-wrapper">
