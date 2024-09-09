@@ -132,56 +132,69 @@ function Books() {
               <Col sm={6} md={4} lg={3} key={book.book_id} className="mb-3">
                 <Card className="book-container">
                   <div className="book-details">
-                    <Card.Body onClick={() => toggleDescription(book.book_id)} style={{ cursor: 'pointer' }}>
-                      <Card.Title>{book.title}</Card.Title>
-                      <Card.Subtitle className="author-name">By {book.author}</Card.Subtitle>
-                      {console.log(book.previewLink)}
+                  <Card.Body className="card-body">
+  <div className="book-info">
+    <img
+      onClick={() => toggleDescription(book.book_id)}
+      style={{ cursor: 'pointer' }}
+      srcSet={`
+        ${book.image_link}-small.jpg 500w,
+        ${book.image_link}-medium.jpg 1000w,
+        ${book.image_link}-large.jpg 1500w,
+        ${book.image_link}-xlarge.jpg 3000w
+      `}
+      sizes="(max-width: 600px) 500px, (max-width: 1200px) 1000px, 1500px"
+      src={`${book.image_link}-x-large.jpg`}
+      alt={book.title}
+      className="img-fluid"
+    />
+    <div className="book-details">
+      <div className="rating-title-author">
+        <div className="rating-stars">
+          <Rating
+            initialRating={book.rating || 0}
+            onChange={(rate) => handleRatingChange(book.book_id, rate)}
+          />
+        </div>
+        <div className="title-author">
+          <Card.Title>{book.title}</Card.Title>
+          <Card.Subtitle className="author-name">By {book.author}</Card.Subtitle>
+        </div>
+      </div>
 
-                      {/* Display categories */}
-                      {book.categories && book.categories.length > 0 && (
-                        <div className="book-categories">
-                          <strong>Categories: </strong>
-                          {book.categories.join(', ')}
-                        </div>
-                      )}
+      {/* Display categories */}
+      {book.categories && book.categories.length > 0 && (
+        <div className="book-categories">
+          <strong>Categories: </strong>
+          {book.categories.join(', ')}
+        </div>
+      )}
 
-                      {book.image_link && (
-                        <img
-                          srcSet={`
-                            ${book.image_link}-small.jpg 500w,
-                            ${book.image_link}-medium.jpg 1000w,
-                            ${book.image_link}-large.jpg 1500w,
-                            ${book.image_link}-xlarge.jpg 3000w
-                          `}
-                          sizes="(max-width: 600px) 500px, (max-width: 1200px) 1000px, 1500px"
-                          src={`${book.image_link}-x-large.jpg`}
-                          alt={book.title}
-                          className="img-fluid"
-                          style={{ width: '70%', height: 'auto', objectFit: 'cover' }}
-                        />
-                      )}
+      <div className="button-group">
+        <Button
+          variant="info"
+          size="sm"
+          onClick={() => handleDeleteBook(book.book_id)}
+        >
+          Delete
+        </Button>
+        {book.previewLink ? (
+          <Button
+            variant="info"
+            size='sm'
+            className="mt-2"
+            onClick={() => window.open(book.previewLink, '_blank')}
+          >
+            Preview
+          </Button>
+        ) : (
+          <p>No preview available</p>
+        )}
+      </div>
+    </div>
+  </div>
+</Card.Body>
 
-                      <Button variant="danger" onClick={() => handleDeleteBook(book.book_id)}>Delete</Button>
-
-                   
-                      <Rating
-                        initialRating={book.rating || 0}
-                        onChange={(rate) => handleRatingChange(book.book_id, rate)}
-                      />
-{book.previewLink ? (
-  <Button
-    variant="info"
-    className="mt-2"
-    onClick={() => window.open(book.previewLink, '_blank')}
-  >
-    Preview
-  </Button>
-) : (
-  <p>No preview available</p>
-)}
-
-                      
-                    </Card.Body>
                   </div>
                   {selectedBookId === book.book_id && (
                     <div className="book-description-wrapper">

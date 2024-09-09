@@ -71,10 +71,6 @@ button:hover {
     margin: 20px;
     padding: 20px;
   }
-
-
-
-
 }
 
 
@@ -189,4 +185,90 @@ img {
 }
 .shaded-star {
   text-shadow: 2px 2px 4px #8B4513;
+}
+
+/* Updated Card.Body Styling */
+.book-card-body {
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  background: #fff;
+  border-radius: 15px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.book-info {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.book-image {
+  width: 120px; /* Adjust width as needed */
+  height: auto;
+  border-radius: 10px;
+  cursor: pointer;
+  margin-right: 20px;
+  margin-left: 20px;
+}
+
+.book-details {
+  flex: 1;
+}
+
+.book-title {
+  font-size: 1.25rem;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.author-name {
+  font-size: 1rem;
+  color: #555;
+  margin-bottom: 10px;
+}
+
+.book-rating {
+  margin-bottom: 20px;
+}
+
+.book-categories {
+  font-size: 0.9rem;
+  color: #1d3731;
+  margin-bottom: 10px;
+}
+
+.book-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.preview-button {
+  background-color: #4a7d71;
+  color: #fff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.preview-button:hover {
+  background-color: #3b6f5a;
+}
+
+
+
+.delete-button:hover {
+  background-color: #c9302c;
+}
+
+.no-preview {
+  color: #888;
+  font-size: 0.9rem;
+}
+
+.img-fluid{
+  margin-right:20px;
 }
