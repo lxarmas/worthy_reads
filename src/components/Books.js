@@ -88,9 +88,15 @@ function Books() {
   };
 
   const toggleDescription = (bookId) => {
-    setSelectedBookId(selectedBookId === bookId ? null : bookId);
+    console.log(`Current selectedBookId: ${selectedBookId}`);
+    setSelectedBookId((prevSelectedBookId) => {
+      const newSelectedBookId = prevSelectedBookId === bookId ? null : bookId;
+      console.log(`New selectedBookId: ${newSelectedBookId}`);
+      return newSelectedBookId;
+    });
   };
-
+  
+  
   return (
     <Container>
       <Nav />
@@ -107,6 +113,7 @@ function Books() {
             onChange={(e) => setTitle(e.target.value)}
             required
           />
+
         </Form.Group>
         <Form.Group controlId="formAuthor" className="mt-2">
           <Form.Label>Author:</Form.Label>
@@ -133,9 +140,10 @@ function Books() {
                 <Card className="book-container">
                   <div className="book-details">
                   <Card.Body className="card-body">
+                    <Button onClick={() => toggleDescription(book.book_id)} >Info</Button>
   <div className="book-info">
+
     <img
-      onClick={() => toggleDescription(book.book_id)}
       style={{ cursor: 'pointer' }}
       srcSet={`
         ${book.image_link}-small.jpg 500w,
@@ -148,6 +156,7 @@ function Books() {
       alt={book.title}
       className="img-fluid"
     />
+
     <div className="book-details">
       <div className="rating-title-author">
         <div className="rating-stars">
@@ -161,8 +170,6 @@ function Books() {
           <Card.Subtitle className="author-name">By {book.author}</Card.Subtitle>
         </div>
       </div>
-
-      {/* Display categories */}
       {book.categories && book.categories.length > 0 && (
         <div className="book-categories">
           <strong>Categories: </strong>
@@ -172,7 +179,7 @@ function Books() {
 
       <div className="button-group">
         <Button
-          variant="info"
+          variant="secondary"
           size="sm"
           onClick={() => handleDeleteBook(book.book_id)}
         >
@@ -180,7 +187,7 @@ function Books() {
         </Button>
         {book.previewLink ? (
           <Button
-            variant="info"
+            variant="primary"
             size='sm'
             className="mt-2"
             onClick={() => window.open(book.previewLink, '_blank')}
@@ -197,10 +204,11 @@ function Books() {
 
                   </div>
                   {selectedBookId === book.book_id && (
-                    <div className="book-description-wrapper">
-                      <BookDescription description={book.description_book} />
-                    </div>
-                  )}
+  <div className="book-description-wrapper" key={`description-${book.book_id}`}>
+    <BookDescription description={book.description_book} />
+  </div>
+)}
+
                 </Card>
               </Col>
             ))}
