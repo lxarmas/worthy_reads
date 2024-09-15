@@ -35,11 +35,6 @@ body {
 }
 
 
-h1, h2, h3, h4, h5, h6 {
-  color: #456a62;
-  font-weight: 700;
-  margin-bottom: 20px;
-}
 
 .username-color {
   margin-top: 1rem;
@@ -107,27 +102,43 @@ img {
 }
 
 
-
-
 .book-info {
   display: flex;
+  flex-direction: column;
   align-items: center;
   margin-bottom: 20px;
+  position: relative;
+}
+
+.title-author {
+  color: red;
+  font-size: smaller;
+  position: relative; /* Change from absolute to relative */
+  margin-top: 10px; /* Add margin to separate from the image */
+  text-align: center; /* Center the title and author */
 }
 
 .book-image {
-  width: 120px; /* Adjust width as needed */
+  width: 100%; /* Ensure image width takes full space available */
   height: auto;
   border-radius: 10px;
-  margin-right: 20px;
-  margin-left: 20px;
+  margin-bottom: 10px;
 }
 
-.book-details {
-  flex: 1;
-  padding: auto;
-  background-color: #cecece;
+.book-details img {
+  max-width: 100%;
+  height: auto;
+  object-fit: cover;
+  margin-bottom: 16px;
 }
+
+.rating-title-author {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
+}
+
 
 
 
@@ -154,9 +165,7 @@ img {
 }
 
 
-.img-fluid{
-  margin-right:20px;
-}
+
 .book-description-pop {
   position: absolute;
   top: 0; /* Aligns the popup to the top of the book component */
@@ -173,6 +182,7 @@ img {
 
 .book-container {
   position: relative; /* Make the book container the relative parent */
+
 }
 
 .book-description-wrapper {
@@ -185,4 +195,32 @@ img {
   padding: 10px;
   border-radius: 5px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Custom Buttons */
+
+
+
+
+.custom-button-primary {
+  background-color: #777777; /* Neutral gray for minimalism */
+  border-radius: 8px; /* Slightly smaller, rounder edges */
+  padding: 6px 12px; /* Smaller padding for a compact look */
+  font-size: 14px; /* Adjusted font size */
+  color: white; /* White text for contrast */
+  border: none; /* Remove border for cleaner design */
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.custom-button-primary:hover {
+  background-color: #1e88e5; /* Subtle hover effect */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Add a minimal shadow */
+}
+
+/* Button group for better spacing */
+.button-group {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px; /* Reduced gap for tighter button layout */
+  margin-top: 8px; /* Less margin for a compact layout */
 }
