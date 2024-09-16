@@ -83,20 +83,23 @@ app.get('/api/users/:userId', async (req, res) => {
     handleError(res, error);
   }
 });
+
 app.get('/api/books/category/:category', async (req, res) => {
-  const { category } = req.params;
+  const { category } = req.params; 
+  console.log('Requested category:', category);
   try {
     // Use the ANY operator to check if the category is present in the array
-    const books = await db.query(
-      'SELECT * FROM books WHERE $1 = ANY(categories)',
+    const books = await client.query(
+      'SELECT * FROM books WHERE $1 = ANY(categories)', 
       [category]
     );
-    res.json(books.rows);
+    res.json(books.rows); // Return the rows as JSON
   } catch (error) {
     console.error('Error fetching books by category:', error);
     res.status(500).send('Error fetching books by category');
   }
 });
+
 
 
 app.post('/api/register', async (req, res) => {

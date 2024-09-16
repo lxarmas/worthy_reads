@@ -1,51 +1,43 @@
-import React, { useEffect, useState } from 'react';
-
-
-
 import { useParams } from 'react-router-dom';
-import { fetchBooksByCategory } from '../api'; // Adjust path as necessary
+import { useState, useEffect } from 'react';
+import { fetchBooksByCategory } from '../api'; // Adjust the import path if necessary
 
-function CategoryPage() {
-  const { category } = useParams(); // Extract category from URL parameters
+const CategoryPage = () => {
+  const { categoryName } = useParams();
   const [books, setBooks] = useState([]);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    if (category) { // Ensure category is not undefined
-      const getBooks = async () => {
-        try {
-          const response = await fetchBooksByCategory(category);
-          setBooks(response.data);
-        } catch (err) {
-          console.error('Error fetching books by category:', err);
-          setError('Failed to fetch books. Please try again.');
-        }
-      };
+    const fetchBooks = async () => {
+      try {
+        const booksData = await fetchBooksByCategory(categoryName);
+        setBooks(booksData);
+      } catch (err) {
+        console.error('Error fetching books:', err);
+        setError('Failed to fetch books. Please try again later.');
+      }
+    };
 
-      getBooks();
-    } else {
-      setError('Category not specified.');
+    if (categoryName) {
+      fetchBooks();
     }
-  }, [category]);
+  }, [categoryName]);
 
   return (
     <div>
-      <h1>Books in {category}</h1>
+      <h1>Books in {categoryName} Category</h1>
       {error && <p>{error}</p>}
-      {books.length > 0 ? (
+      {Array.isArray(books) && books.length > 0 ? (
         <ul>
           {books.map((book) => (
-            <li key={book.book_id}>
-              <strong>{book.title}</strong> by {book.author}
-            </li>
+            <li key={book.id}>{book.title}</li>
           ))}
         </ul>
       ) : (
-        <p>No books found in this category.</p>
+        <p>No books found.</p>
       )}
     </div>
   );
-}
+};
 
 export default CategoryPage;
-
