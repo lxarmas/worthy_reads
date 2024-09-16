@@ -1,15 +1,16 @@
-
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
- import Header from './components/Header';
+import Header from './components/Header';
 import HomePage from './components/HomePage';
 import About from './components/About';
 import Footer from './components/Footer';
 import LogIn from './components/LogIn';
 import Register from './components/Register';
 import Books from './components/Books';
+import CategoryPage from './components/CategoryPage'; // Import the new component
+
 function App() {
   return (
-     <Router>
+    <Router>
       <Header/>
       <Routes>
         <Route path="/" element={<HomePage />} />
@@ -17,7 +18,7 @@ function App() {
         <Route path='/login' element={<LogIn />} />
         <Route path='/register' element={<Register />} />
         <Route path='/books' element={<Books />} />
-
+        <Route path='/category/:categoryName' element={<CategoryPage />} /> {/* New route for category */}
       </Routes>
       <Footer/>
     </Router>

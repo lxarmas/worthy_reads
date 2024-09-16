@@ -1,15 +1,22 @@
 /* Footer.css */
 .footer {
-    background-color: transparent; /* Make background transparent */
-    color: #fff; /* Set text color to white or another contrasting color */
-    padding: 1rem 0; /* Adjust padding as needed */
-    border-top: 1px solid #ddd; /* Optional: Add a border if needed */
+    background-color: #8db6a6; /* Dark background for a modern look */
+    color: #fff; /* White text for contrast */
+    padding: 1.5rem 0; /* Extra padding for breathing room */
+    border-top: 1px solid #333; /* Subtle border */
 }
 
-.footer .book-icon {
-    margin-bottom: 0.5rem; /* Adjust margin as needed */
+.footer .footer-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem; /* Space between the icon and text */
 }
+
+
 
 .footer .text-muted {
-    color: #ccc; /* Set text color for muted text */
+    color: #aaa; /* Slightly darker muted text for readability */
+    font-size: 0.9rem; /* Slightly smaller for elegance */
+    letter-spacing: 0.05em; /* Modern look */
 }

@@ -4,7 +4,7 @@ body {
   margin: 0;
   padding: 0;
   font-family: Arial, sans-serif;
-  background-color: #f5f5f5; /* Light background for contrast */
+  background-color: #92b3aa; /* Light background for contrast */
   padding-top: 70px; /* Make sure this matches your nav bar's height */
 }
 
@@ -40,10 +40,12 @@ body {
   margin-top: 1rem;
   opacity: 0; /* Initially hidden */
   transform: translateY(-30px) scale(0.9); /* Start 30px above and slightly smaller */
-  animation: fadeInBounce 1.5s ease-out forwards, colorChange 3s ease-in-out infinite; /* Enhanced with color change */
+  animation: fadeInBounce 1.5s ease-out forwards, colorChange 15s ease-in-out infinite; /* Enhanced with color change */
   font-size: 2.5rem; /* Slightly larger font size */
   text-align: center; /* Center the text */
+  font-weight: bolder;
   animation-fill-mode: forwards; /* Keep the final state after the animation */
+  letter-spacing: 0.05rem;
 }
 
 @keyframes fadeInBounce {
@@ -67,27 +69,35 @@ body {
 /* Keyframes for changing color */
 @keyframes colorChange {
   0% {
-    color: #456a62; /* Start color */
+    color: #ff9100; /* Red */
   }
-  25% {
-    color: #4a7d71; /* Change color */
+  14% {
+    color: #00ffd0; /* Orange */
   }
-  50% {
-    color: #51a08a; /* Change color again */
+  28% {
+    color: #0099ff; /* Yellow */
   }
-  75% {
-    color: #69b8a1; /* Another color */
+  42% {
+    color: #00ff00; /* Green */
+  }
+  57% {
+    color: #0000ff; /* Blue */
+  }
+  71% {
+    color: #4b0082; /* Indigo */
+  }
+  85% {
+    color: #9400d3; /* Violet */
   }
   100% {
-    color: #456a62; /* Return to start color */
-  }
+    color: #ff0000; 
 }
 
-
+}
 
 .book-description-content {
-  font-size: 0.9rem; /* Adjust the font size */
-  background-color: rgb(243, 243, 243);
+ 
+
   margin-left:0.5rem;
   margin-right: 0.5rem;
   margin-top: 0.5rem;
@@ -108,28 +118,85 @@ img {
   align-items: center;
   margin-bottom: 20px;
   position: relative;
+  z-index: 1; /* Ensures the content is on top */
+  padding: 20px; /* Add padding so the text isn't too close to the edge */
+  background-color: #fff; /* White background for text readability */
+  border: 1px solid #ccc; /* Light border to frame the content */
+  border-radius: 8px; /* Rounded corners for a softer look */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Shadow for a subtle 3D effect */
+  font-family: 'Times New Roman', serif; /* Classic book font */
+  text-align: center; /* Center-align text */
+  line-height: 1.5; /* Improve readability */
 }
 
-.title-author {
-  color: red;
-  font-size: smaller;
-  position: relative; /* Change from absolute to relative */
-  margin-top: 10px; /* Add margin to separate from the image */
-  text-align: center; /* Center the title and author */
+.book-info::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url('../../public/images/marbled-8050572_1280.png');
+  background-size: cover;
+  background-position: center;
+  filter: blur(10px); /* Adjust the blur strength */
+  opacity: 0.8; /* Slightly transparent to soften the background */
+  z-index: -1; /* Puts the background behind the content */
+  border-radius: 8px; /* Match the border radius of the content */
 }
+
+/* Optional: Add a heading style */
+.book-info h1,
+.book-info h2,
+.book-info h3 {
+  margin: 0;
+  padding: 0;
+  font-family: 'Times New Roman', serif; /* Consistent book font for headings */
+}
+
+/* Optional: Style links within .book-info */
+.book-info a {
+  color: #007bff; /* Blue color for links */
+  text-decoration: none; /* Remove underline */
+}
+
+.book-info a:hover {
+  text-decoration: underline; /* Underline on hover for better usability */
+}
+
+
+
+.title-author {
+  color: #000000; /* Use a dark gray for a more sophisticated look */
+  font-size: 1rem; /* Set a reasonable font size */
+  font-family: 'Arial', sans-serif; /* Choose a clean, modern font */
+  text-align: center; /* Center the text */
+  margin-top: 10px; /* Add space above */
+  margin-bottom: 10px; /* Add space below */
+  position: relative; /* Keep position relative for potential adjustments */
+}
+
+.title-author .title {
+  font-weight: bold; /* Make the title stand out */
+  font-size: 1.2rem; /* Slightly larger font size for the title */
+}
+
+
 
 .book-image {
   width: 100%; /* Ensure image width takes full space available */
   height: auto;
   border-radius: 10px;
   margin-bottom: 10px;
+ 
 }
 
 .book-details img {
-  max-width: 100%;
+  max-width: 80%;
   height: auto;
   object-fit: cover;
   margin-bottom: 16px;
+  cursor: pointer;
 }
 
 .rating-title-author {
@@ -144,7 +211,7 @@ img {
 
 .author-name {
   font-size: 1rem;
-  color: #555;
+  color: #000000;
   margin-bottom: 10px;
 }
 
@@ -164,7 +231,7 @@ img {
   align-items: center;
 }
 
-
+.book
 
 .book-description-pop {
   position: absolute;
@@ -172,7 +239,7 @@ img {
   left: 0; /* Aligns the popup to the left of the book component */
   z-index: 10; /* Ensure the popup appears above other elements */
   width: 100%; /* Take full width of the book component */
-  background-color: rgba(255, 255, 255, 0.95); /* Semi-transparent background */
+ 
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Add shadow for depth */
   padding: 10px;
   border-radius: 5px;
@@ -181,23 +248,20 @@ img {
 }
 
 .book-container {
-  position: relative; /* Make the book container the relative parent */
+  position: relative; 
+  
 
 }
-
 .book-description-wrapper {
   position: absolute;
-  top: 25%; /* Adjust to align with the book card */
-  
-  transform: translateX(10px); /* Adjust spacing */
-  width: 300px; /* Set a fixed width for the popup */
-  background-color: rgba(255, 255, 255, 0.95);
-  padding: 10px;
-  border-radius: 5px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  top: 0; /* Adjust to your preferred position */
+  left: 0;
+  width: 100%; /* Ensure it spans the whole card width */
+  background-color: white; /* Or your preferred background */
+  padding: 20px;
+  z-index: 1000; /* Ensure it is higher than other elements */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Optional shadow for better visibility */
 }
-
-/* Custom Buttons */
 
 
 
@@ -223,4 +287,41 @@ img {
   justify-content: space-between;
   gap: 8px; /* Reduced gap for tighter button layout */
   margin-top: 8px; /* Less margin for a compact layout */
+}
+.text-muted{
+  color:white;
+  background-color: white;
+}
+.card-body {
+  position: relative;
+}
+.custom-button-primary.ms-auto {
+  position: absolute;
+  top: 10px; /* Adjust this value to move the button higher */
+  right: 10px; /* Adjust this value to move the button further right if needed */
+  z-index: 1; /* Ensure the button is above other content */
+}
+/* Custom style for the question button */
+.question-button {
+  background-color: #686868 !important; /* Force override */
+  color: white !important;
+  border: none !important;
+  padding: 6px 12px !important;
+  border-radius: 5px !important;
+  font-size: 12px !important;
+  cursor: pointer !important;
+  position: absolute !important; /* Ensure it's positioned correctly */
+  top: -21px !important;
+  right: -21px !important;
+}
+
+
+.question-button:hover {
+  background-color: #558bf6 !important; /* Darken color on hover */
+  transform: translateY(-2px) !important; /* Slight hover effect */
+}
+
+.question-button:active {
+  background-color: #939393 !important; /* Even darker color when pressed */
+  transform: translateY(1px) !important; /* Pressed effect */
 }

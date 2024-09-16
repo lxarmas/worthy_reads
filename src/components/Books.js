@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Button, Form, Alert, Card, Container, Row, Col, Spinner } from 'react-bootstrap';
-import Rating from './Rating'; // Import the new Rating component
+import { Link } from 'react-router-dom';
+
+
+import Rating from './Rating';
 import BookCount from './BookCount';
 import BookDescription from './BookDescription';
 import Nav from './Nav';
@@ -75,8 +78,6 @@ function Books() {
   };
 
   const handleRatingChange = async (bookId, rate) => {
-    console.log(`Book ID: ${bookId}, Rating: ${rate}`);
-
     try {
       await axios.put(`http://localhost:3000/api/books/${bookId}/rating`, { rating: rate });
       setBooks(books.map(book => 
@@ -88,14 +89,10 @@ function Books() {
   };
 
   const toggleDescription = (bookId) => {
-    console.log(`Current selectedBookId: ${selectedBookId}`);
     setSelectedBookId((prevSelectedBookId) => {
-      const newSelectedBookId = prevSelectedBookId === bookId ? null : bookId;
-      console.log(`New selectedBookId: ${newSelectedBookId}`);
-      return newSelectedBookId;
+      return prevSelectedBookId === bookId ? null : bookId;
     });
   };
-  
   
   return (
     <Container>
@@ -134,78 +131,87 @@ function Books() {
         <>
           {error && <Alert variant="danger" className="mt-3">{error}</Alert>}
           <Row className="mt-3">
+
             {books.map((book) => (
-           <Col sm={6} md={4} lg={3} key={book.book_id} className="mb-3">
-           <Card className="book-container">
-             <Card.Body className="card-body">
-               <div className="book-info">
-                 <div className="book-details">
-                   <div className="title-author">
-                     <Card.Title>{book.title}</Card.Title>
-                     <Card.Subtitle className="author-name">By {book.author}</Card.Subtitle>
-                   </div>
-                   
-                   {/* Clickable Image */}
-                   <img
-                     srcSet={`
-                       ${book.image_link}-small.jpg 500w,
-                       ${book.image_link}-medium.jpg 1000w,
-                       ${book.image_link}-large.jpg 1500w,
-                       ${book.image_link}-xlarge.jpg 3000w
-                     `}
-                     sizes="(max-width: 600px) 500px, (max-width: 1200px) 1000px, 1500px"
-                     src={`${book.image_link}-x-large.jpg`}
-                     alt={book.title}
-                     className="img-fluid clickable-image"
-                     onClick={() => book.previewLink && window.open(book.previewLink, '_blank')} // Trigger preview link on image click
-                   />
-         
-                   <div className="rating-title-author">
-                     <div className="rating-stars">
-                       <Rating
-                         initialRating={book.rating || 0}
-                         onChange={(rate) => handleRatingChange(book.book_id, rate)}
-                       />
-                     </div>
-                   </div>
-         
-                   {book.categories && book.categories.length > 0 && (
-                     <div className="book-categories">
-                       <strong>Categories: </strong>
-                       {book.categories.join(', ')}
-                     </div>
-                   )}
-         
-                   <div className="button-group">
-                     <Button
-                       className="custom-button custom-button-primary"
-                       onClick={() => handleDeleteBook(book.book_id)}
-                     >
-                       Delete
-                     </Button>
-                     <Button
-                       className="custom-button custom-button-primary"
-                       onClick={() => toggleDescription(book.book_id)}
-                     >
-                       Info
-                     </Button>
-                   </div>
-                 </div>
-               </div>
-         
-               {selectedBookId === book.book_id && (
-  <div className="book-description-wrapper" key={`description-${book.book_id}`}>
-    <BookDescription
-      description={book.description_book}
-      onClick={() => toggleDescription(book.book_id)}  // Pass toggleDescription to handle the button click
-    />
+              <Col sm={6} md={4} lg={3} key={book.book_id} className="mb-3">
+                <Card className="book-container">
+                <Card.Body className="card-body">
+  <div className="book-info">
+    <div className="book-details">
+      {/* Flex container to align elements */}
+      <div className="d-flex justify-content-between align-items-center">
+        <div className="title-author">
+          <Card.Title>{book.title}</Card.Title>
+          <Card.Subtitle className="author-name">By {book.author}</Card.Subtitle>
+        </div>
+        {/* Move the button to the right */}
+        <Button
+          className='question-button'
+          onClick={() => toggleDescription(book.book_id)}
+          style={{ all: 'unset' }}
+        >
+          ?
+        </Button>
+      </div>
+
+      <img
+        srcSet={`
+          ${book.image_link}-small.jpg 500w,
+          ${book.image_link}-medium.jpg 1000w,
+          ${book.image_link}-large.jpg 1500w,
+          ${book.image_link}-xlarge.jpg 3000w
+        `}
+        sizes="(max-width: 600px) 500px, (max-width: 1200px) 1000px, 1500px"
+        src={`${book.image_link}-x-large.jpg`}
+        alt={book.title}
+        className="img-fluid clickable-image"
+        onClick={() => book.previewLink && window.open(book.previewLink, '_blank')}
+      />
+
+      <div className="rating-title-author">
+        <div className="rating-stars">
+          <Rating
+            initialRating={book.rating || 0}
+            onChange={(rate) => handleRatingChange(book.book_id, rate)}
+          />
+        </div>
+      </div>
+
+      {book.categories && book.categories.length > 0 && (
+  <div className="book-categories">
+    <strong>Categories: </strong>
+    {book.categories.map((category, index) => (
+      <React.Fragment key={category}>
+        <Link to={`/category/${category}`}>{category}</Link>
+        {index < book.categories.length - 1 && ', '}
+      </React.Fragment>
+    ))}
   </div>
 )}
 
-             </Card.Body>
-           </Card>
-         </Col>
-         
+      <div className="button-group">
+        <Button
+          className="custom-button custom-button-primary"
+          onClick={() => handleDeleteBook(book.book_id)}
+        >
+          Delete
+        </Button>
+      </div>
+    </div>
+  </div>
+
+  {selectedBookId === book.book_id && (
+    <div className="book-description-wrapper" key={`description-${book.book_id}`}>
+      <BookDescription
+        description={book.description_book}
+        onClick={() => toggleDescription(book.book_id)}
+      />
+    </div>
+  )}
+</Card.Body>
+
+                </Card>
+              </Col>
             ))}
           </Row>
         </>
