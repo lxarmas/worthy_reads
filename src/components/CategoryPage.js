@@ -1,20 +1,20 @@
-import { useParams } from 'react-router-dom';
-import { useState, useEffect } from 'react';
-import { fetchBooksByCategory } from '../api'; // Adjust the import path if necessary
+import React, { useEffect, useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { fetchBooksByCategory } from '../api';
+import './CategoryPage.css'; // Ensure your CSS file is properly linked
 
 const CategoryPage = () => {
   const { categoryName } = useParams();
   const [books, setBooks] = useState([]);
-  const [error, setError] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchBooks = async () => {
       try {
-        const booksData = await fetchBooksByCategory(categoryName);
-        setBooks(booksData);
-      } catch (err) {
-        console.error('Error fetching books:', err);
-        setError('Failed to fetch books. Please try again later.');
+        const response = await fetchBooksByCategory(categoryName);
+        setBooks(response);
+      } catch (error) {
+        console.error('Error fetching books:', error);
       }
     };
 
@@ -24,18 +24,35 @@ const CategoryPage = () => {
   }, [categoryName]);
 
   return (
-    <div>
-      <h1>Books in {categoryName} Category</h1>
-      {error && <p>{error}</p>}
-      {Array.isArray(books) && books.length > 0 ? (
-        <ul>
+    <div className="category-page">
+      <h1>Books in "{categoryName}" Category</h1>
+      {books && books.length > 0 ? (
+        <div className="book-list">
           {books.map((book) => (
-            <li key={book.id}>{book.title}</li>
+            <div className="book-card" key={book.id}>
+              <h2 className="book-title">{book.title}</h2>
+              <p className="book-author">by {book.author}</p>
+              <img
+                srcSet={`
+                  ${book.image_link}-small.jpg 500w,
+                  ${book.image_link}-medium.jpg 1000w,
+                  ${book.image_link}-large.jpg 1500w,
+                  ${book.image_link}-xlarge.jpg 3000w
+                `}
+                sizes="(max-width: 600px) 500px, (max-width: 1200px) 1000px, 1500px"
+                src={`${book.image_link}-medium.jpg`}
+                alt={book.title}
+                className="book-image"
+                onClick={() => book.previewLink && window.open(book.previewLink, '_blank')}
+              />
+              <p className="book-description">{book.description}</p>
+            </div>
           ))}
-        </ul>
+        </div>
       ) : (
         <p>No books found.</p>
       )}
+      <button className="back-button" onClick={() => navigate('/books')}>Back to Books</button>
     </div>
   );
 };
