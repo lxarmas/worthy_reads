@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { fetchBooksByCategory } from '../api';
-import './CategoryPage.css'; // Ensure your CSS file is properly linked
+import './CategoryPage.css';
 
 const CategoryPage = () => {
   const { categoryName } = useParams();
@@ -24,12 +24,12 @@ const CategoryPage = () => {
   }, [categoryName]);
 
   return (
-    <div className="category-page">
+    <div className="category-one">
       <h1>Books in "{categoryName}" Category</h1>
       {books && books.length > 0 ? (
         <div className="book-list">
           {books.map((book) => (
-            <div className="book-card" key={book.id}>
+            <div className="book-card-category" key={book.id}>
               <h2 className="book-title">{book.title}</h2>
               <p className="book-author">by {book.author}</p>
               <img
@@ -43,7 +43,11 @@ const CategoryPage = () => {
                 src={`${book.image_link}-medium.jpg`}
                 alt={book.title}
                 className="book-image"
-                onClick={() => book.previewLink && window.open(book.previewLink, '_blank')}
+                onClick={() => {
+                  console.log(book.previewLink);
+                  if (book.previewLink) window.open(book.previewLink, '_blank');
+                }}
+                
               />
               <p className="book-description">{book.description}</p>
             </div>
