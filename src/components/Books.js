@@ -3,7 +3,6 @@ import axios from 'axios';
 import { Button, Form, Alert, Card, Container, Row, Col, Spinner } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 
-
 import Rating from './Rating';
 import BookCount from './BookCount';
 import BookDescription from './BookDescription';
@@ -93,10 +92,9 @@ function Books() {
       return prevSelectedBookId === bookId ? null : bookId;
     });
   };
-  
-  const getSecureImageLink = (url) => url.replace(/^http:\/\//i, 'https://');
 
-const secureImageLink = getSecureImageLink(book.image_link);
+  const getSecureImageLink = (url) => url ? url.replace(/^http:\/\//i, 'https://') : '';
+
   return (
     <Container>
       <Nav />
@@ -134,96 +132,88 @@ const secureImageLink = getSecureImageLink(book.image_link);
         <>
           {error && <Alert variant="danger" className="mt-3">{error}</Alert>}
           <Row className="mt-3">
+            {books.map((book) => {
+              const secureImageLink = getSecureImageLink(book.image_link);
 
-            {books.map((book) => (
-              <Col sm={6} md={4} lg={3} key={book.book_id} className="mb-3">
-                <Card className="book-container">
-                <Card.Body className="card-body">
-  <div className="book-info">
-    <div className="book-details">
-      {/* Flex container to align elements */}
-      <div className="d-flex justify-content-between align-items-center">
-        <div className="title-author">
-          <Card.Title>{book.title}</Card.Title>
-          <Card.Subtitle className="author-name">By {book.author}</Card.Subtitle>
-        </div>
-        {/* Move the button to the right */}
-        <Button
-          className='question-button'
-          onClick={() => toggleDescription(book.book_id)}
-          style={{ all: 'unset' }}
-        >
-          ?
-        </Button>
-      </div>
-      console.log('Image URL:', secureImageLink);
+              return (
+                <Col sm={6} md={4} lg={3} key={book.book_id} className="mb-3">
+                  <Card className="book-container">
+                    <Card.Body className="card-body">
+                      <div className="book-info">
+                        <div className="book-details">
+                          <div className="d-flex justify-content-between align-items-center">
+                            <div className="title-author">
+                              <Card.Title>{book.title}</Card.Title>
+                              <Card.Subtitle className="author-name">By {book.author}</Card.Subtitle>
+                            </div>
+                            <Button
+                              className='question-button'
+                              onClick={() => toggleDescription(book.book_id)}
+                              style={{ all: 'unset' }}
+                            >
+                              ?
+                            </Button>
+                          </div>
 
-      <img
-    srcSet={`
-      ${secureImageLink}-small.jpg 500w,
-      ${secureImageLink}-medium.jpg 1000w,
-      ${secureImageLink}-large.jpg 1500w,
-      ${secureImageLink}-xlarge.jpg 3000w
-    `}
-    sizes="(max-width: 600px) 500px, (max-width: 1200px) 1000px, 1500px"
-    src={`${secureImageLink}-xlarge.jpg`}
-    alt={book.title}
-    className="img-fluid clickable-image"
-    onClick={() => book.previewLink && window.open(book.previewLink, '_blank')}
-  />book.image_link}-xlarge.jpg 3000w
-        `}
-        sizes="(max-width: 600px) 500px, (max-width: 1200px) 1000px, 1500px"
-        src={`${book.image_link}-x-large.jpg`}
-        alt={book.title}
-        className="img-fluid clickable-image"
-        onClick={() => book.previewLink && window.open(book.previewLink, '_blank')}
-      />
+                          <img
+                            srcSet={`
+                              ${secureImageLink}-small.jpg 500w,
+                              ${secureImageLink}-medium.jpg 1000w,
+                              ${secureImageLink}-large.jpg 1500w,
+                              ${secureImageLink}-xlarge.jpg 3000w
+                            `}
+                            sizes="(max-width: 600px) 500px, (max-width: 1200px) 1000px, 1500px"
+                            src={`${secureImageLink}-xlarge.jpg`}
+                            alt={book.title}
+                            className="img-fluid clickable-image"
+                            onClick={() => book.previewLink && window.open(book.previewLink, '_blank')}
+                          />
 
-      <div className="rating-title-author">
-        <div className="rating-stars">
-          <Rating
-            initialRating={book.rating || 0}
-            onChange={(rate) => handleRatingChange(book.book_id, rate)}
-          />
-        </div>
-      </div>
+                          <div className="rating-title-author">
+                            <div className="rating-stars">
+                              <Rating
+                                initialRating={book.rating || 0}
+                                onChange={(rate) => handleRatingChange(book.book_id, rate)}
+                              />
+                            </div>
+                          </div>
 
-      {book.categories && book.categories.length > 0 && (
-  <div className="book-categories">
-    <strong>Categories: </strong>
-    {book.categories.map((category, index) => (
-      <React.Fragment key={category}>
-        <Link to={`/category/${category}`}>{category}</Link>
-        {index < book.categories.length - 1 && ', '}
-      </React.Fragment>
-    ))}
-  </div>
-)}
+                          {book.categories && book.categories.length > 0 && (
+                            <div className="book-categories">
+                              <strong>Categories: </strong>
+                              {book.categories.map((category, index) => (
+                                <React.Fragment key={category}>
+                                  <Link to={`/category/${category}`}>{category}</Link>
+                                  {index < book.categories.length - 1 && ', '}
+                                </React.Fragment>
+                              ))}
+                            </div>
+                          )}
 
-      <div className="button-group">
-        <Button
-          className="custom-button custom-button-primary"
-          onClick={() => handleDeleteBook(book.book_id)}
-        >
-          Delete
-        </Button>
-      </div>
-    </div>
-  </div>
+                          <div className="button-group">
+                            <Button
+                              className="custom-button custom-button-primary"
+                              onClick={() => handleDeleteBook(book.book_id)}
+                            >
+                              Borrar
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
 
-  {selectedBookId === book.book_id && (
-    <div className="book-description-wrapper" key={`description-${book.book_id}`}>
-      <BookDescription
-        description={book.description_book}
-        onClick={() => toggleDescription(book.book_id)}
-      />
-    </div>
-  )}
-</Card.Body>
-
-                </Card>
-              </Col>
-            ))}
+                      {selectedBookId === book.book_id && (
+                        <div className="book-description-wrapper">
+                          <BookDescription
+                            description={book.description_book}
+                            onClick={() => toggleDescription(book.book_id)}
+                          />
+                        </div>
+                      )}
+                    </Card.Body>
+                  </Card>
+                </Col>
+              );
+            })}
           </Row>
         </>
       )}
