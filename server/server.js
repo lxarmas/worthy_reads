@@ -18,7 +18,9 @@ app.use(session({
   saveUninitialized: false
 }));
 
-app.use(cors({ origin: 'http://localhost:3001', credentials: true }));
+
+app.use(cors({ origin: 'https://main.d1hr2gomzak89g.amplifyapp.com', credentials: true }));
+
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
