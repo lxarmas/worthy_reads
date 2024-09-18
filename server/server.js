@@ -39,15 +39,19 @@ client.connect()
 
 // Utility function to map Google Books API data to database format
 function mapToDatabaseFormat(apiData) {
+  const imageLink = apiData.volumeInfo.imageLinks ? apiData.volumeInfo.imageLinks.thumbnail : null;
+  const secureImageLink = imageLink ? imageLink.replace(/^http:/, 'https:') : null;
+
   return {
     title: apiData.volumeInfo.title,
-    author: apiData.volumeInfo.authors ? apiData.volumeInfo.authors.join(', ') : 'Unknown Author', // Handle multiple authors
-    image_link: apiData.volumeInfo.imageLinks ? apiData.volumeInfo.imageLinks.thumbnail : null,
+    author: apiData.volumeInfo.authors ? apiData.volumeInfo.authors.join(', ') : 'Unknown Author',
+    image_link: secureImageLink, // Use secure image link
     description_book: apiData.volumeInfo.description || '',
     categories: apiData.volumeInfo.categories || ['Uncategorized'],
-    preview_link: apiData.volumeInfo.previewLink || '' // Ensure previewLink is mapped to preview_link
+    preview_link: apiData.volumeInfo.previewLink || ''
   };
 }
+
 
 
 // Utility function to map database data to API format

@@ -94,6 +94,9 @@ function Books() {
     });
   };
   
+  const getSecureImageLink = (url) => url.replace(/^http:\/\//i, 'https://');
+
+const secureImageLink = getSecureImageLink(book.image_link);
   return (
     <Container>
       <Nav />
@@ -153,13 +156,21 @@ function Books() {
           ?
         </Button>
       </div>
+      console.log('Image URL:', secureImageLink);
 
       <img
-        srcSet={`
-          ${book.image_link}-small.jpg 500w,
-          ${book.image_link}-medium.jpg 1000w,
-          ${book.image_link}-large.jpg 1500w,
-          ${book.image_link}-xlarge.jpg 3000w
+    srcSet={`
+      ${secureImageLink}-small.jpg 500w,
+      ${secureImageLink}-medium.jpg 1000w,
+      ${secureImageLink}-large.jpg 1500w,
+      ${secureImageLink}-xlarge.jpg 3000w
+    `}
+    sizes="(max-width: 600px) 500px, (max-width: 1200px) 1000px, 1500px"
+    src={`${secureImageLink}-xlarge.jpg`}
+    alt={book.title}
+    className="img-fluid clickable-image"
+    onClick={() => book.previewLink && window.open(book.previewLink, '_blank')}
+  />book.image_link}-xlarge.jpg 3000w
         `}
         sizes="(max-width: 600px) 500px, (max-width: 1200px) 1000px, 1500px"
         src={`${book.image_link}-x-large.jpg`}

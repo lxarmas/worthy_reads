@@ -3,10 +3,12 @@
 import axios from 'axios';
 
 
+
 const api = axios.create({
-  baseURL: 'http://localhost:3000', // Adjust the baseURL as per your backend server's URL
+  baseURL: 'http://your-ec2-public-ip:3000', // Replace with your actual backend server URL
   withCredentials: true, // Include credentials with requests if needed
 });
+
 
 export const registerUser = async (userData) => {
   return await api.post('/api/register', userData);
