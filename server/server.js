@@ -18,11 +18,19 @@ app.use(session({
   saveUninitialized: false
 }));
 
+const allowedOrigins = [
+  'http://localhost:3000', // Local frontend
+  'https://main.d1hr2gomzak89g.amplifyapp.com' // Deployed frontend
+];
+
 app.use(cors({
-  origin: [
-    'http://localhost:3000', // For local testing
-    'https://main.d1hr2gomzak89g.amplifyapp.com' // Your deployed frontend
-  ],
+  origin: (origin, callback) => {
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
 }));
 
