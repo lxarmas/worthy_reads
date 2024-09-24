@@ -19,7 +19,7 @@ app.use(session({
 }));
 
 const allowedOrigins = [
-  'http://localhost:3000', // Local frontend
+  'http://localhost:3001', // Local frontend
   'https://main.d1hr2gomzak89g.amplifyapp.com' // Deployed frontend
 ];
 
