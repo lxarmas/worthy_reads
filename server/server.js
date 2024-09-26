@@ -168,7 +168,7 @@ app.post('/api/books', async (req, res) => {
     // Insert into the database
     await client.query(
       'INSERT INTO books (title, author, image_link, user_id, description_book, categories, preview_link) VALUES ($1, $2, $3, $4, $5, $6, $7)',
-      [bookData.title, bookData.author, bookData.image_link, user_id, bookData.description_book, bookData.categories, bookData.preview_link]
+      [bookData.title, bookData.author, bookData.image_link, user_id, bookData.description_book, bookData.categories(','), bookData.preview_link]
     );
 
     const dbData = await fetchDataFromDatabase(user_id);
