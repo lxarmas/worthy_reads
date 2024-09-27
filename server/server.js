@@ -6,65 +6,70 @@ const axios = require('axios');
 const { Client } = require('pg');
 const cors = require('cors');
 const path = require('path');
-
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 3000; // Added PORT environment variable for deployment flexibility
 
+// Secret key for sessions
 const secretKey = crypto.randomBytes(32).toString('hex');
 
+// Session middleware configuration
 app.use(session({
   secret: secretKey,
   resave: false,
   saveUninitialized: false
 }));
 
+// Allowed origins for CORS
 const allowedOrigins = [
   'http://localhost:3001', // Local frontend
   'https://main.d1hr2gomzak89g.amplifyapp.com' // Deployed frontend
 ];
 
+// CORS setup
 app.use(cors({
   origin: (origin, callback) => {
-    if (allowedOrigins.includes(origin)) {
+    if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
       callback(new Error('Not allowed by CORS'));
     }
   },
-  credentials: true,
+  credentials: true
 }));
 
-
+// Serve static files
 app.use(express.static(path.join(__dirname, 'public')));
+
+// Body parsers
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
+// PostgreSQL client setup
 const client = new Client({
   user: process.env.DB_USER || 'postgres',
   host: process.env.DB_HOST || 'localhost',
   database: process.env.DB_NAME || 'book_notes_db',
   password: process.env.DB_PASSWORD || 'new_password',
-  port: process.env.DB_PORT || 5432,
+  port: process.env.DB_PORT || 5432
 });
 
+// Connect to PostgreSQL
 client.connect()
   .then(() => console.log('Connected to PostgreSQL database'))
   .catch(error => console.error('Error connecting to PostgreSQL database:', error));
 
-// Utility function to map Google Books API data to database format
+// Utility functions for mapping data between API and database formats
 function mapToDatabaseFormat(apiData) {
   return {
     title: apiData.volumeInfo.title,
-    author: apiData.volumeInfo.authors ? apiData.volumeInfo.authors.join(', ') : 'Unknown Author', // Handle multiple authors
+    author: apiData.volumeInfo.authors ? apiData.volumeInfo.authors.join(', ') : 'Unknown Author',
     image_link: apiData.volumeInfo.imageLinks ? apiData.volumeInfo.imageLinks.thumbnail : null,
     description_book: apiData.volumeInfo.description || '',
     categories: apiData.volumeInfo.categories || ['Uncategorized'],
-    preview_link: apiData.volumeInfo.previewLink || '' // Ensure previewLink is mapped to preview_link
+    preview_link: apiData.volumeInfo.previewLink || ''
   };
 }
 
-
-// Utility function to map database data to API format
 function mapToApiFormat(dbData) {
   return dbData.map(book => ({
     ...book,
@@ -72,24 +77,22 @@ function mapToApiFormat(dbData) {
   }));
 }
 
+// Get all books for a user
 app.get('/api/books/:userId', async (req, res) => {
   try {
     const user_id = req.params.userId;
     const dbData = await fetchDataFromDatabase(user_id);
-    
-    // Map snake_case fields to camelCase for the API response
     const responseData = mapToApiFormat(dbData);
-    
     res.json(responseData);
   } catch (error) {
     handleError(res, error);
   }
 });
 
+// Get user details by userId
 app.get('/api/users/:userId', async (req, res) => {
-  const userId = req.params.userId;
   try {
-    const result = await client.query('SELECT first_name FROM users WHERE user_id = $1', [userId]);
+    const result = await client.query('SELECT first_name FROM users WHERE user_id = $1', [req.params.userId]);
     if (result.rows.length > 0) {
       res.json(result.rows[0]);
     } else {
@@ -100,62 +103,55 @@ app.get('/api/users/:userId', async (req, res) => {
   }
 });
 
+// Get books by category
 app.get('/api/books/category/:category', async (req, res) => {
-  const { category } = req.params; 
-  console.log('Requested category:', category);
   try {
-    // Use the ANY operator to check if the category is present in the array
-    const books = await client.query(
-      'SELECT * FROM books WHERE $1 = ANY(categories)', 
-      [category]
-    );
-    res.json(books.rows); // Return the rows as JSON
+    const books = await client.query('SELECT * FROM books WHERE $1 = ANY(categories)', [req.params.category]);
+    res.json(books.rows);
   } catch (error) {
     console.error('Error fetching books by category:', error);
     res.status(500).send('Error fetching books by category');
   }
 });
 
-
-
+// Register new user
 app.post('/api/register', async (req, res) => {
   const { username, password, first_name, last_name } = req.body;
   try {
-    const checkResult = await client.query("SELECT * FROM users WHERE username = $1", [username]);
+    const checkResult = await client.query('SELECT * FROM users WHERE username = $1', [username]);
     if (checkResult.rows.length > 0) {
-      res.status(400).json({ message: 'Username already exists. Try logging in.' });
+      res.status(400).json({ message: 'Username already exists' });
     } else {
-      const result = await client.query("INSERT INTO users (username, password, first_name, last_name) VALUES ($1, $2, $3, $4) RETURNING user_id", [username, password, first_name, last_name]);
-      const user_id = result.rows[0].user_id;
-      res.json({ user_id });
+      const result = await client.query('INSERT INTO users (username, password, first_name, last_name) VALUES ($1, $2, $3, $4) RETURNING user_id', [username, password, first_name, last_name]);
+      res.json({ user_id: result.rows[0].user_id });
     }
-  } catch (err) {
-    handleError(res, err);
+  } catch (error) {
+    handleError(res, error);
   }
 });
 
+// User login
 app.post('/api/login', async (req, res) => {
   const { username, password } = req.body;
   try {
-    const result = await client.query("SELECT * FROM users WHERE username = $1", [username]);
+    const result = await client.query('SELECT * FROM users WHERE username = $1', [username]);
     if (result.rows.length > 0) {
       const user = result.rows[0];
-      const storedPassword = user.password;
-      if (password === storedPassword) {
-        const user_id = user.user_id;
-        req.session.user_id = user_id;
-        res.json({ user_id });
+      if (password === user.password) {
+        req.session.user_id = user.user_id;
+        res.json({ user_id: user.user_id });
       } else {
-        res.status(400).json({ message: 'Incorrect Password' });
+        res.status(400).json({ message: 'Incorrect password' });
       }
     } else {
       res.status(400).json({ message: 'User not found' });
     }
-  } catch (err) {
-    handleError(res, err);
+  } catch (error) {
+    handleError(res, error);
   }
 });
 
+// Add new book
 app.post('/api/books', async (req, res) => {
   const { title, author, user_id } = req.body;
   try {
@@ -164,12 +160,10 @@ app.post('/api/books', async (req, res) => {
       res.status(404).json({ message: 'Book not found' });
       return;
     }
-
-    // Insert into the database
-    await client.query(
-      'INSERT INTO books (title, author, image_link, user_id, description_book, categories, preview_link) VALUES ($1, $2, $3, $4, $5, $6, $7)',
-      [bookData.title, bookData.author, bookData.image_link, user_id, bookData.description_book, bookData.categories(','), bookData.preview_link]
-    );
+   await client.query(
+  'INSERT INTO books (title, author, image_link, user_id, description_book, categories, preview_link) VALUES ($1, $2, $3, $4, $5, $6::text[], $7)',
+  [bookData.title, bookData.author, bookData.image_link, user_id, bookData.description_book, `{${bookData.categories.join(',')}}`, bookData.preview_link]
+);
 
     const dbData = await fetchDataFromDatabase(user_id);
     res.status(201).json(dbData);
@@ -178,42 +172,54 @@ app.post('/api/books', async (req, res) => {
   }
 });
 
-
+// Update book rating
 app.put('/api/books/:id/rating', async (req, res) => {
-  const { id } = req.params;
-  const { rating } = req.body;
-  console.log('Received data:', { rating, id });
-
-  // Convert rating to integer (if needed)
-  const ratingInt = parseInt(rating, 10);
-
   try {
-    const result = await client.query(
-      'UPDATE books SET rating = $1 WHERE book_id = $2 RETURNING *',
-      [ratingInt, id]
-    );
+    const result = await client.query('UPDATE books SET rating = $1 WHERE book_id = $2 RETURNING *', [parseInt(req.body.rating), req.params.id]);
     if (result.rows.length > 0) {
       res.json(result.rows[0]);
     } else {
       res.status(404).json({ message: 'Book not found' });
     }
   } catch (error) {
-    console.error('Error updating rating:', error);
-    res.status(500).send('Error updating rating');
+    handleError(res, error);
   }
 });
 
+// Delete book
 app.delete('/api/books/:book_id', async (req, res) => {
-  const bookId = req.params.book_id;
-  const user_id = req.session.user_id; // Retrieve the user_id from the session
   try {
-    await client.query('DELETE FROM books WHERE book_id = $1', [bookId]);
-    const updatedBookCount = await fetchBookCount(user_id); // Fetch updated book count
-    res.status(200).json({ success: true, message: 'Book deleted successfully', bookCount: updatedBookCount });
+    await client.query('DELETE FROM books WHERE book_id = $1', [req.params.book_id]);
+    const bookCount = await fetchBookCount(req.session.user_id);
+    res.status(200).json({ success: true, message: 'Book deleted', bookCount });
   } catch (error) {
     handleError(res, error);
   }
 });
+
+// Helper functions
+async function fetchDataFromDatabase(user_id) {
+  try {
+    const result = await client.query('SELECT * FROM books WHERE user_id = $1', [user_id]);
+    return result.rows;
+  } catch (error) {
+    throw error;
+  }
+}
+
+async function fetchBookData(title, author) {
+  const apiUrl = `https://www.googleapis.com/books/v1/volumes?q=intitle:${encodeURIComponent(title)}+inauthor:${encodeURIComponent(author)}`;
+  try {
+    const response = await axios.get(apiUrl);
+    if (!response.data.items || response.data.items.length === 0) {
+      return null;
+    }
+    return mapToDatabaseFormat(response.data.items[0]);
+  } catch (error) {
+    console.error('Error fetching book data:', error);
+    return null;
+  }
+}
 
 async function fetchBookCount(user_id) {
   try {
@@ -229,35 +235,7 @@ function handleError(res, error) {
   res.status(500).json({ error: 'Internal Server Error' });
 }
 
-async function fetchDataFromDatabase(user_id) {
-  try {
-    const { rows: dbData } = await client.query('SELECT * FROM books WHERE user_id = $1', [user_id]);
-    return dbData; // Return raw data to be formatted later
-  } catch (error) {
-    console.error('Error fetching data from database:', error);
-    throw error;
-  }
-}
-
-async function fetchBookData(title, author) {
-  const apiUrl = `https://www.googleapis.com/books/v1/volumes?q=intitle:${encodeURIComponent(title)}+inauthor:${encodeURIComponent(author)}`;
-  try {
-    const response = await axios.get(apiUrl);
-    const items = response.data.items;
-    if (!items || items.length === 0) {
-      console.error('No books found for the given search criteria');
-      return null;
-    }
-    const bookData = items[0];
-    console.log('API Data:', bookData); // Log the entire bookData to verify previewLink
-    return mapToDatabaseFormat(bookData); // Use the mapping function here
-  } catch (error) {
-    console.error('Error fetching book data:', error);
-    return null;
-  }
-}
-
-
+// Start the server
 app.listen(port, () => {
   console.log(`Server is running on http://localhost:${port}`);
 });
