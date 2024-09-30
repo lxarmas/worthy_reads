@@ -17,7 +17,7 @@ const StarIcon = ({ filled, onClick }) => (
       d={filled ? 
         "M12 17.27L18.18 21 16.54 14.87 22 10.27H15.81L12 4 8.19 10.27H2L7.46 14.87 5.82 21z" :
         "M12 17.27L18.18 21 16.54 14.87 22 10.27H15.81L12 4 8.19 10.27H2L7.46 14.87 5.82 21z"}
-      fill={filled ? '#FFB74D' : '#BDBDBD'} // Darker yellow for filled stars
+      fill={filled ?  '#FFB74D' : 'grey'} // Darker yellow for filled stars
       stroke="none" // Ensure no stroke or border
     />
   </motion.svg>
