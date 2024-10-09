@@ -2,11 +2,8 @@
 
 import axios from 'axios';
 
-
 const api = axios.create({
-  baseURL: process.env.NODE_ENV === 'development' 
-    ? 'http://localhost:3000' // Local backend during development
-    : 'http://your-public-ip:3000', // Public backend during production
+  baseURL: process.env.REACT_APP_API_URL || 'http://localhost:3000', // Default to local during development
   withCredentials: true,
 });
 
