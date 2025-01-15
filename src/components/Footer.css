@@ -1,7 +1,7 @@
 /* Footer.css */
 .footer {
-    background-color: #8db6a6; /* Dark background for a modern look */
-    color: #fff; /* White text for contrast */
+   background-image: url('../../public/images/marbled-8050572_1280.png');
+    color: #000000; /* White text for contrast */
     padding: 1.5rem 0; /* Extra padding for breathing room */
     border-top: 1px solid #333; /* Subtle border */
 }
@@ -16,7 +16,11 @@
 
 
 .footer .text-muted {
-    color: #aaa; /* Slightly darker muted text for readability */
+    color: #000000; /* Slightly darker muted text for readability */
     font-size: 0.9rem; /* Slightly smaller for elegance */
     letter-spacing: 0.05em; /* Modern look */
+}
+
+.book-icon{
+    color:rgb(138, 192, 138);
 }
