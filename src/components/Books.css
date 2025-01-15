@@ -12,7 +12,7 @@ body {
 /* search title and author */
 .book-card {
   border: 3px solid rgb(92, 91, 91);
-  
+
   padding: 40px;
   margin: 30px auto;
   width: 600px;
@@ -66,38 +66,9 @@ body {
   }
 }
 
-/* Keyframes for changing color */
-@keyframes colorChange {
-  0% {
-    color: #ff9100; /* Red */
-  }
-  14% {
-    color: #00ffd0; /* Orange */
-  }
-  28% {
-    color: #0099ff; /* Yellow */
-  }
-  42% {
-    color: #00ff00; /* Green */
-  }
-  57% {
-    color: #0000ff; /* Blue */
-  }
-  71% {
-    color: #4b0082; /* Indigo */
-  }
-  85% {
-    color: #9400d3; /* Violet */
-  }
-  100% {
-    color: #ff0000; 
-}
 
-}
 
 .book-description-content {
- 
-
   margin-left:0.5rem;
   margin-right: 0.5rem;
   margin-top: 0.5rem;
@@ -167,7 +138,7 @@ img {
 
 
 .title-author {
-  color: #000000; /* Use a dark gray for a more sophisticated look */
+  color: #707070; /* Use a dark gray for a more sophisticated look */
   font-size: 1rem; /* Set a reasonable font size */
   font-family: 'Arial', sans-serif; /* Choose a clean, modern font */
   text-align: center; /* Center the text */
@@ -267,7 +238,7 @@ img {
 
 
 .custom-button-primary {
-  background-color: #777777; /* Neutral gray for minimalism */
+  background-color: #608465; /* Neutral gray for minimalism */
   border-radius: 8px; /* Slightly smaller, rounder edges */
   padding: 6px 12px; /* Smaller padding for a compact look */
   font-size: 14px; /* Adjusted font size */
@@ -277,7 +248,7 @@ img {
 }
 
 .custom-button-primary:hover {
-  background-color: #1e88e5; /* Subtle hover effect */
+  background-color: #83b089; /* Subtle hover effect */
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Add a minimal shadow */
 }
 
@@ -303,8 +274,8 @@ img {
 }
 /* Custom style for the question button */
 .question-button {
-  background-color: #686868 !important; /* Force override */
-  color: white !important;
+  background-color: #608465 !important; /* Force override */
+  color: rgb(0, 0, 0) !important;
   border: none !important;
   padding: 6px 12px !important;
   border-radius: 5px !important;
@@ -317,11 +288,12 @@ img {
 
 
 .question-button:hover {
-  background-color: #558bf6 !important; /* Darken color on hover */
+  background-color: #89bf90 !important; /* Darken color on hover */
+  color: rgb(255, 255, 255) !important;
   transform: translateY(-2px) !important; /* Slight hover effect */
 }
 
 .question-button:active {
-  background-color: #939393 !important; /* Even darker color when pressed */
+  background-color: #82b189 !important; /* Even darker color when pressed */
   transform: translateY(1px) !important; /* Pressed effect */
 }
