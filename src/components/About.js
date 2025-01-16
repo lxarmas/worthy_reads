@@ -55,8 +55,20 @@ function About() {
             animate={{ opacity: 1 }}
             transition={{ duration: 1, delay: 1.5 }}
           >
-            <button className="btn btn-primary">Explore Books</button>
-            <button className="btn btn-outline-light">Join the Community</button>
+            <button
+              className="btn btn-primary"
+              onClick={() => window.location.href = '/books'}
+            >
+              Explore Books
+            </button>
+
+            <button
+              className="btn btn-outline-light"
+              onClick={() => window.location.href = '/register'}
+            >
+              Join the Community
+            </button>
+
           </motion.div>
         </div>
       </div>
@@ -88,4 +100,3 @@ function About() {
 }
 
 export default About;
-
