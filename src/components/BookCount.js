@@ -1,10 +1,26 @@
-// src/components/BookCount.js
-import React from 'react';
+function BookCount( { count, categoryName } ) {
+  const countStyle = {
+    color: count > 10 ? 'darkblue' : 'blue', // Dark blue if more than 10 books, blue otherwise
+    fontWeight: 'bold',
+    fontSize: '1.2em',
+  };
 
-function BookCount({ count }) {
+  const categoryStyle = {
+    color: 'blue', // Set the color for the category name
+    fontStyle: 'italic',
+    fontWeight: 'bold'
+  };
+
   return (
     <h2 className="countBook">
-      You have read <span id="bookCount">{count}</span> books, keep up the good work
+      You have read <span style={countStyle}>{count}</span> books
+      {categoryName && (
+        <>
+          {' in '}
+          <span style={categoryStyle}>{categoryName}</span>
+        </>
+      )}
+      , keep up the good work!
     </h2>
   );
 }

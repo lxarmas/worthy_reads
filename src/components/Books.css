@@ -1,4 +1,4 @@
-
+/* main body for books  */
 
 body {
   margin: 0;
@@ -9,7 +9,7 @@ body {
 }
 
 
-/* search title and author */
+/* search title and author book  */
 .book-card {
   border: 3px solid rgb(92, 91, 91);
 
@@ -34,9 +34,10 @@ body {
   margin-bottom: 20px; /* Space below the text */
 }
 
-
+/* animation for welcoming user */
 
 .username-color {
+  color: rgb(93, 111, 97);
   margin-top: 1rem;
   opacity: 0; /* Initially hidden */
   transform: translateY(-30px) scale(0.9); /* Start 30px above and slightly smaller */
@@ -66,14 +67,24 @@ body {
   }
 }
 
-
+/* preview info question mark */
 
 .book-description-content {
-  margin-left:0.5rem;
-  margin-right: 0.5rem;
-  margin-top: 0.5rem;
-  color: #000000; /* Darker color for text */
+  background-color: #f9f9f9; /* Subtle off-white background */
+  border: 1px solid #e0e0e0; /* Light gray border for definition */
+  border-radius: 8px; /* Rounded corners for a softer look */
+  padding: 1rem; /* Adequate padding for spacing */
+  margin: 0.5rem 1rem 0.5rem 0.5rem; /* Consistent margins */
+  color: #333; /* Softer text color for better readability */
+  font-family: 'Arial', sans-serif; /* Clean, modern font */
+  line-height: 1.6; /* Improved line spacing for readability */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+  transition: transform 0.2s, box-shadow 0.2s; /* Smooth hover animation */
+}
 
+.book-description-content:hover {
+  transform: translateY(-5px); /* Slight lift on hover */
+  box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15); /* Enhanced shadow on hover */
 }
 
 img {
@@ -82,7 +93,7 @@ img {
   object-fit: cover;
 }
 
-
+/* whole card for each book */
 .book-info {
   display: flex;
   flex-direction: column;
