@@ -202,7 +202,6 @@ img {
   align-items: center;
 }
 
-.book
 
 .book-description-pop {
   position: absolute;
@@ -296,4 +295,13 @@ img {
 .question-button:active {
   background-color: #82b189 !important; /* Even darker color when pressed */
   transform: translateY(1px) !important; /* Pressed effect */
+}
+
+/* Log In page  */
+
+.card-body{
+  background-color: rgb(225, 225, 225);
+}
+.form-group{
+  background-color: #f2f4f2;
 }

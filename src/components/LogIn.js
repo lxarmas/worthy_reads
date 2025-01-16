@@ -6,31 +6,31 @@ import './Books.css';
 
 
 function LogIn() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [email, setEmail] = useState( '' );
+  const [password, setPassword] = useState( '' );
+  const [error, setError] = useState( '' );
   const navigate = useNavigate();
 
-  const handleSubmit = async (event) => {
+  const handleSubmit = async ( event ) => {
     event.preventDefault();
     try {
-      const response = await loginUser({ username: email, password });
-      console.log('Login successful:', response);
+      const response = await loginUser( { username: email, password } );
+      console.log( 'Login successful:', response );
       // Store the user ID instead of token
-      localStorage.setItem('userId', response.data.user_id);
+      localStorage.setItem( 'userId', response.data.user_id );
 
-      navigate('/books'); // Redirect to books page after successful login
-    } catch (error) {
-      console.error('Login error:', error.response ? error.response.data : error.message);
+      navigate( '/books' ); // Redirect to books page after successful login
+    } catch ( error ) {
+      console.error( 'Login error:', error.response ? error.response.data : error.message );
       // Update error message based on response
       const errorMessage = error.response ? error.response.data : 'Login failed. Please try again.';
-      setError(errorMessage);
+      setError( errorMessage );
     }
   };
 
   return (
     <div className="container mt-5">
-      <Nav/>
+      <Nav />
       <h1 className="text-center">Log In</h1>
       <div className="row justify-content-center">
         <div className="col-md-6">
@@ -44,7 +44,7 @@ function LogIn() {
                     className="form-control"
                     id="email"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={( e ) => setEmail( e.target.value )}
                     placeholder="Enter your email"
                     required
                   />
@@ -56,7 +56,7 @@ function LogIn() {
                     className="form-control"
                     id="password"
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    onChange={( e ) => setPassword( e.target.value )}
                     placeholder="Enter your password"
                     required
                   />
