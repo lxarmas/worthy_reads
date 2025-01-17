@@ -14,7 +14,7 @@ function Footer() {
 
 
                     </div>
-                    <span style={{ color: 'black' }}>© 2024 WORTHY READS</span>
+                    <span style={{ color: 'black' }}>© 2025 WORTHY READS</span>
 
                 </div>
             </div>
@@ -22,4 +22,4 @@ function Footer() {
     );
 }
 
-export default Footer;
+export default Footer
