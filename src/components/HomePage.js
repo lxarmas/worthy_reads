@@ -1,65 +1,149 @@
+import React, { useEffect, useState } from 'react';
+import { Button, Row, Col, Card, Spinner, Alert } from 'react-bootstrap';
+import { Link } from 'react-router-dom';
+import Rating from './Rating';
 import './HomePage.css';
 import Nav from './Nav';
+import axios from 'axios';
 
 function HomePage() {
+  const [books, setBooks] = useState( [] );
+  const [loading, setLoading] = useState( true );
+  const [error, setError] = useState( null );
+
+  useEffect( () => {
+    const fetchBooks = async () => {
+      try {
+        const searchKeywords = ['new', 'bestsellers', 'fiction', 'history', 'science', 'fantasy', 'romance', 'computers'];
+        const randomKeyword = searchKeywords[Math.floor( Math.random() * searchKeywords.length )];
+
+        const response = await axios.get( 'https://www.googleapis.com/books/v1/volumes', {
+          params: {
+            q: randomKeyword,
+            maxResults: 4,
+          },
+        } );
+
+        setBooks( response.data.items || [] );
+      } catch ( error ) {
+        console.error( 'Error fetching books:', error );
+        setError( 'Failed to fetch books. Please try again.' );
+      } finally {
+        setLoading( false );
+      }
+    };
+
+    fetchBooks();
+  }, [] );
+
   return (
     <main className="container mt-5">
       <Nav />
-      <div className="jumbotron text-center p-5" style={{ background: 'linear-gradient(135deg, #2c7a6e, #3ba599)', color: 'white', borderRadius: '10px' }}>
+
+      <div className="jumbotron text-center p-5">
         <div className="container">
-          <div className="book-icon mb-4">
-            <i className="fas fa-book fa-7x" style={{ color: '#ffffffb3', animation: 'bounce 2s infinite' }}></i>
-          </div>
-          <h1 className="display-4 font-weight-bold mb-3" style={{ fontFamily: 'Georgia, serif', letterSpacing: '2px' }}>Welcome to Worthy Reads</h1>
-          <p className="lead mb-4" style={{ fontFamily: 'Arial, sans-serif' }}>
-            Discover, share, and cherish the books you love most.
-          </p>
-          <hr className="my-4" style={{ borderColor: 'rgba(255, 255, 255, 0.6)' }} />
-          <div className="row justify-content-center">
-            <div className="col-md-4">
-              <a
-                className="btn btn-lg btn-block mb-2"
-                href="/register"
-                role="button"
-                style={{
-                  backgroundColor: '#ffffff',
-                  color: '#2c7a6e',
-                  border: '2px solid #ffffff',
-                  fontWeight: 'bold',
-                  borderRadius: '50px',
-                }}
-              >
-                Get Started
-              </a>
-            </div>
-            <div className="col-md-4">
-              <a
-                className="btn btn-lg btn-block"
-                href="/login"
-                role="button"
-                style={{
-                  backgroundColor: '#ffffff',
-                  color: '#2c7a6e',
-                  border: '2px solid #ffffff',
-                  fontWeight: 'bold',
-                  borderRadius: '50px',
-                }}
-              >
-                Login
-              </a>
-            </div>
+          <h2 className="username-color">Welcome to Worthy Reads</h2>
+          <p className="hero-subtitle">Discover, share, and cherish the books you love most.</p>
+
+          <Row className="align-items-center justify-content-center my-4">
+            <Col md={2} className="text-center">
+              <img
+                src="/images/portrait.jpg"
+                alt="Your Name"
+                className="my-picture img-fluid rounded-circle"
+              />
+            </Col>
+            <Col md={6} className="text-center">
+              <h3 className="why-title">Why I Built Worthy Reads</h3>
+              <p>
+                Books have always been a source of inspiration and knowledge in my life.
+                I wanted to create a space where readers can not only find their next great read
+                but also connect with a community of like-minded individuals.
+              </p>
+              <blockquote className="testimonial">
+                "A room without books is like a body without a soul." - Marcus Tullius Cicero
+              </blockquote>
+            </Col>
+          </Row>
+
+
+          <div className="features-section my-5">
+            <h2 className="section-title">Join the Club</h2>
+            <Row className="text-center">
+              <Col md={4}>
+                <i className="fas fa-search feature-icon"></i>
+                <h5>Search Books</h5>
+                <p>Find your favorite books by title or author.</p>
+              </Col>
+              <Col md={4}>
+                <i className="fas fa-users feature-icon"></i>
+                <h5>Community</h5>
+                <p>Connect with other book lovers and share reviews.</p>
+              </Col>
+              <Col md={4}>
+                <i className="fas fa-bookmark feature-icon"></i>
+                <h5>Bookmarks</h5>
+                <p>Save books to your personal collection.</p>
+              </Col>
+            </Row>
           </div>
         </div>
       </div>
-      <div className="home-background" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: -1, backgroundImage: 'url("/path-to-your-background.jpg")', backgroundSize: 'cover', backgroundPosition: 'center', filter: 'brightness(0.8)' }}></div>
-      <div className="intro-home mt-5 text-center p-4" style={{ backgroundColor: 'rgba(44, 122, 110, 0.8)', color: 'white', borderRadius: '10px', fontFamily: 'Georgia, serif', fontSize: '18px', lineHeight: '1.8' }}>
-        <p>
-          This page is dedicated to the books that you love most and want to have
-          at your disposal. Our love for books inspired this website, offering a
-          space to cherish the books that bring us pleasure, pain, and everything
-          in between. If you're a book lover too, we invite you to be part of our
-          Worthy Reads community—for free!
-        </p>
+
+      <div className="book-section row mt-4">
+        {loading ? (
+          <Col xs={12} className="text-center">
+            <Spinner animation="border" />
+            <p>Loading books...</p>
+          </Col>
+        ) : error ? (
+          <Col xs={12} className="text-center">
+            <Alert variant="danger">{error}</Alert>
+          </Col>
+        ) : (
+          books.map( ( book, index ) => (
+            <Col sm={6} md={4} lg={3} key={index} className="mb-3">
+              <Card className="book-container">
+                <Card.Body className="card-body">
+                  <div className="book-info">
+                    <div className="book-details">
+                      <Card.Title>{book.volumeInfo.title}</Card.Title>
+                      <Card.Subtitle className="author-name">
+                        By {book.volumeInfo.authors ? book.volumeInfo.authors.join( ', ' ) : 'Unknown'}
+                      </Card.Subtitle>
+                      <img
+                        src={book.volumeInfo.imageLinks?.thumbnail || 'https://via.placeholder.com/150'}
+                        alt={book.volumeInfo.title}
+                        className="img-fluid clickable-image"
+                        onClick={() => book.volumeInfo.previewLink && window.open( book.volumeInfo.previewLink, '_blank' )}
+                      />
+                      <div className="rating-stars">
+                        <Rating initialRating={book.volumeInfo.averageRating || 0} />
+                      </div>
+                      {book.volumeInfo.categories && (
+                        <div className="book-categories">
+                          <strong>Categories: </strong>
+                          {book.volumeInfo.categories.map( ( category, index ) => (
+                            <React.Fragment key={category}>
+                              <Link to={`/category/${category}`}>{category}</Link>
+                              {index < book.volumeInfo.categories.length - 1 && ', '}
+                            </React.Fragment>
+                          ) )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </Card.Body>
+              </Card>
+            </Col>
+          ) )
+        )}
+      </div>
+
+      <div className="testimonials-section my-5 text-center">
+        <h2 className="section-title">What Readers Say</h2>
+        <blockquote>"Worthy Reads has completely transformed the way I find and organize my books." - Noam Chomsky</blockquote>
+        <blockquote>"I love the community aspect! Sharing reviews is so easy." - Barack Obama</blockquote>
       </div>
     </main>
   );
