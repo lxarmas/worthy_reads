@@ -11,7 +11,7 @@ body {
 
 /* search title and author book  */
 .book-card {
-  border: 3px solid rgb(92, 91, 91);
+  border: 3px solid rgb(13, 70, 30);
 
   padding: 40px;
   margin: 30px auto;
@@ -37,12 +37,12 @@ body {
 /* animation for welcoming user */
 
 .username-color {
-  color: rgb(93, 111, 97);
+  color: rgb(255, 255, 255);
   margin-top: 1rem;
   opacity: 0; /* Initially hidden */
   transform: translateY(-30px) scale(0.9); /* Start 30px above and slightly smaller */
   animation: fadeInBounce 1.5s ease-out forwards, colorChange 15s ease-in-out infinite; /* Enhanced with color change */
-  font-size: 2.5rem; /* Slightly larger font size */
+  font-size: 4rem; /* Slightly larger font size */
   text-align: center; /* Center the text */
   font-weight: bolder;
   animation-fill-mode: forwards; /* Keep the final state after the animation */
