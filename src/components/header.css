@@ -1,54 +1,43 @@
 .header {
   background-image: url('../../public/images/marbled-8050572_1280.png');
   background-size: cover;
-  padding: 20px 10px;
+  background-position: center; /* Ensure the background is centered */
+  padding: 20px 30px; /* Maintain balanced spacing */
+  display: flex; /* Flexbox layout for alignment */
+  align-items: center; /* Align elements vertically */
+  justify-content: space-between; /* Spread elements across the header */
+  width: 100%; /* Ensure the header spans the full width */
+  height: 40vh; /* Optional: Ensure the header takes full screen height */
   text-align: left;
+  position: relative; /* So that any absolute elements can be positioned relative to the header */
 }
 
-.header h1 {
-  color: #000000; /* Keep the text black */
-  font-family: 'Arial', sans-serif;
-  font-weight: bold;
-  font-size: 4em;
-  margin: 0.2em 0;
-  position: relative;
-  display: inline-block; /* For styling pseudo-elements */
-  overflow: hidden; /* Hide overflow for the sliding effect */
-  line-height: 1.2; /* Adjust line spacing */
-}
 
-.header h1::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: -150%; /* Start well off-screen */
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent 25%, red 50%, transparent 75%);
-  animation: slideRedSliver 4s infinite ease-in-out; /* Smooth and elegant */
-  mix-blend-mode: lighten; /* Blend with text for a refined look */
-  opacity: 0.6; /* Subtle effect */
-}
 
-@keyframes slideRedSliver {
-  0% {
-    left: -150%; /* Start off-screen */
-  }
-  50% {
-    left: 25%; /* Midway across the text */
-  }
-  100% {
-    left: 150%; /* Exit off-screen */
-  }
-}
-
-.header p {
+.headerTitle {
   color: #000000;
   font-family: 'Arial', sans-serif;
-  font-size: 1.8em;
-  margin: 0;
-  position: relative;
-  top: -0.5em; /* Slightly above baseline */
-  margin-left: 1.4em;
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1); /* Add subtle depth */
+  font-weight: bolder;
+  font-size: 6em; /* Slightly smaller for readability */
+  margin: 10px 0 0; /* Add space above and below */
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1); /* Subtle depth */
+}
+
+.header-logo {
+  width: 8em; /* Match the visual size of the h1 */
+  height: 8em; /* Ensure circular aspect ratio */
+  background-color: rgba(126, 166, 124, 0.7); /* Subtle translucent background */
+  border-radius: 50%; /* Circular logo */
+  padding: 5px; /* Inner spacing */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Shadow for depth */
+  display: block; /* Ensure proper layout */
+  margin-right: 3em;
+}
+
+.header-content {
+  display: flex;
+  flex-direction: column; /* Stack the elements vertically */
+  align-items: flex-start; /* Align content to the left */
+  gap: 10px; /* Consistent spacing between elements */
+  width: 100%; /* Ensure the content covers the full width */
 }
