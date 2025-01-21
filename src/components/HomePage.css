@@ -131,3 +131,18 @@
   transform: scale(1.05) translateY(-10px);
   box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.2);
 }
+.text-center{
+ font-weight: bold;
+}
+.testimonial{
+  font-family: cursive;
+  color:#2c7a6e
+}
+.author-name {
+  color: white; /* White color for the author's name */
+  font-weight: bold; /* Optional: Make it stand out more */
+}
+.testimonial .author-name {
+  color: rgb(6, 6, 6) !important; /* Force the text to white */
+  font-weight: bold; /* Optional: Make it stand out */
+}

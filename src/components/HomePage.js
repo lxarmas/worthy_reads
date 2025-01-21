@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Row, Col, Card, Spinner, Alert } from 'react-bootstrap';
+import { Row, Col, Card, Spinner, Alert } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import Rating from './Rating';
 import './HomePage.css';
@@ -43,7 +43,7 @@ function HomePage() {
       <div className="jumbotron text-center p-5">
         <div className="container">
           <h2 className="username-color">Welcome to Worthy Reads</h2>
-          <p className="hero-subtitle">Discover, share, and cherish the books you love most.</p>
+
 
           <Row className="align-items-center justify-content-center my-4">
             <Col md={2} className="text-center">
@@ -54,14 +54,14 @@ function HomePage() {
               />
             </Col>
             <Col md={6} className="text-center">
-              <h3 className="why-title">Why I Built Worthy Reads</h3>
+
               <p>
                 Books have always been a source of inspiration and knowledge in my life.
                 I wanted to create a space where readers can not only find their next great read
                 but also connect with a community of like-minded individuals.
               </p>
               <blockquote className="testimonial">
-                "A room without books is like a body without a soul." - Marcus Tullius Cicero
+                "A room without books is like a body without a soul."  - <span className="author-name">Marcus Tullius Cicero</span>
               </blockquote>
             </Col>
           </Row>
