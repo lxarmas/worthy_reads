@@ -6,15 +6,15 @@ function Footer() {
             <div className="container text-center">
                 <div className="footer-content">
                     <div className="book-icon">
-                        <div className="book-icon">
-                            <i className="fas fa-book fa-3x"></i>
-
-
-                        </div>
+                        <img
+                            src="/images/logo.png"
+                            alt="Worthy Reads Logo"
+                            className="footer-logo"
+                        />
 
 
                     </div>
-                    <span style={{ color: 'black' }}>© 2025 WORTHY READS</span>
+                    <span style={{ color: 'black', marginRight: '4rem' }}>© 2025 WORTHY READS</span>
 
                 </div>
             </div>

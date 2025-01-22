@@ -24,3 +24,14 @@
 .book-icon{
     color:rgb(138, 192, 138);
 }
+
+.footer-logo {
+  width: 5em; /* Match the visual size of the h1 */
+  height: 5em; /* Ensure circular aspect ratio */
+  background-color: rgba(126, 166, 124, 0.7); /* Subtle translucent background */
+  border-radius: 50%; /* Circular logo */
+  padding: 5px; /* Inner spacing */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Shadow for depth */
+  display: block; /* Ensure proper layout */
+  margin-right: 3em;
+}
