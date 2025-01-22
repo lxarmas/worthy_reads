@@ -90,6 +90,7 @@
 }
 
 /* Image Shadow and Hover Effect */
+
 .my-picture {
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
@@ -99,6 +100,7 @@
   transform: scale(1.1);
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
 }
+
 
 /* Button Glow Effect */
 .btn-custom {
@@ -146,3 +148,31 @@
   color: rgb(6, 6, 6) !important; /* Force the text to white */
   font-weight: bold; /* Optional: Make it stand out */
 }
+.testimonialImage{
+  width: 900%;
+  margin-right: 9rem;
+  background-size: cover;
+  background-position: center; 
+}
+
+.text-left{
+  margin-right: auto;
+}
+
+
+
+img {
+  max-width: 100%;
+  height: auto;
+}
+.gradient-lead {
+  background: linear-gradient(90deg, #7daea1, #7daea1);
+  color: #fff; /* Make text color white for better contrast */
+  padding: 5rem; /* Add some padding */
+  
+  border-radius: 0.5rem; /* Round the corners */
+  display: inline-block; /* Prevent it from stretching the full width */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Optional shadow */
+ 
+}
+
