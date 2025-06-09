@@ -18,7 +18,7 @@ function App() {
         <Route path='/login' element={<LogIn />} />
         <Route path='/register' element={<Register />} />
         <Route path='/books' element={<Books />} />
-        <Route path='/category/:categoryName' element={<CategoryPage />} /> {/* Correct route for category */}
+        <Route path='/category/:categoryName' element={<CategoryPage />} />
       </Routes>
       <Footer />
     </Router>
