@@ -1,43 +1,124 @@
 .header {
   background-image: url('../../public/images/marbled-8050572_1280.png');
   background-size: cover;
-  background-position: center; /* Ensure the background is centered */
-  padding: 20px 30px; /* Maintain balanced spacing */
-  display: flex; /* Flexbox layout for alignment */
-  align-items: center; /* Align elements vertically */
-  justify-content: space-between; /* Spread elements across the header */
-  width: 100%; /* Ensure the header spans the full width */
-  height: 40vh; /* Optional: Ensure the header takes full screen height */
-  text-align: left;
-  position: relative; /* So that any absolute elements can be positioned relative to the header */
+  background-position: center;
+  padding: 20px 30px;
+  display: flex;
+  justify-content: center;         /* Center content horizontally */
+  align-items: center;             /* Center content vertically */
+  width: 100%;
+  height: 40vh;
+  position: relative;
+  text-align: center;              /* Center text */
 }
 
+.header-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;             /* Fix typo here */
+  gap: 10px;
+}
 
+.header-logo {
+  width: 8em;
+  height: 8em;
+  background-color: rgba(126, 166, 124, 0.7);
+  border-radius: 50%;
+  padding: 2px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  display: block;
+  margin: 0 auto;                  /* Remove margin-right */
+}
 
 .headerTitle {
   color: #000000;
   font-family: 'Arial', sans-serif;
   font-weight: bolder;
-  font-size: 6em; /* Slightly smaller for readability */
-  margin: 10px 0 0; /* Add space above and below */
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1); /* Subtle depth */
+  font-size: 60px;
+  margin: 0;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
 }
 
-.header-logo {
-  width: 8em; /* Match the visual size of the h1 */
-  height: 8em; /* Ensure circular aspect ratio */
-  background-color: rgba(126, 166, 124, 0.7); /* Subtle translucent background */
-  border-radius: 50%; /* Circular logo */
-  padding: 5px; /* Inner spacing */
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Shadow for depth */
-  display: block; /* Ensure proper layout */
-  margin-right: 3em;
+@media (max-width: 600px) {
+  .jumbotron {
+    padding: 1rem;
+    font-size: 0.9rem;
+  }
+
+  .testimonials-section {
+    padding: 1rem;
+    font-size: 1rem;
+  }
+
+  .feature-icon {
+    font-size: 2rem;
+  }
+
+  .book-container {
+    margin: 1rem 0;
+  }
+
+  .gradient-lead {
+    padding: 2rem;
+    font-size: 0.8rem;
+  }
+
+  .testimonialImage {
+    width: 100%;
+    margin-right: 0;
+  }
 }
 
-.header-content {
-  display: flex;
-  flex-direction: column; /* Stack the elements vertically */
-  align-items: flex-start; /* Align content to the left */
-  gap: 10px; /* Consistent spacing between elements */
-  width: 100%; /* Ensure the content covers the full width */
+/* For medium devices (tablets, 600px to 1024px) */
+@media (min-width: 600px) and (max-width: 1024px) {
+  .jumbotron {
+    padding: 1.5rem;
+    font-size: 1rem;
+  }
+
+  .testimonials-section {
+    padding: 1.5rem;
+    font-size: 1.1rem;
+  }
+
+  .feature-icon {
+    font-size: 2.2rem;
+  }
+
+  .gradient-lead {
+    padding: 3rem;
+    font-size: 1rem;
+  }
+
+  .testimonialImage {
+    width: 80%;
+    margin-right: 1rem;
+  }
+}
+
+/* For large devices (desktops, more than 1024px) */
+@media (min-width: 1024px) {
+  .jumbotron {
+    padding: 3rem;
+    font-size: 1.2rem;
+  }
+
+  .testimonials-section {
+    padding: 2rem;
+    font-size: 1.2rem;
+  }
+
+  .feature-icon {
+    font-size: 2.5rem;
+  }
+
+  .gradient-lead {
+    padding: 5rem;
+    font-size: 1.2rem;
+  }
+
+  .testimonialImage {
+    width: 50%;
+    margin-right: 2rem;
+  }
 }

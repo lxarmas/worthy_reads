@@ -80,6 +80,7 @@
   animation: swing 2s infinite;
 }
 
+
 @keyframes swing {
   0%, 100% {
     transform: rotate(0deg);
@@ -166,13 +167,105 @@ img {
   height: auto;
 }
 .gradient-lead {
-  background: linear-gradient(90deg, #7daea1, #7daea1);
-  color: #fff; /* Make text color white for better contrast */
-  padding: 5rem; /* Add some padding */
-  
-  border-radius: 0.5rem; /* Round the corners */
-  display: inline-block; /* Prevent it from stretching the full width */
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Optional shadow */
- 
+  background: linear-gradient(90deg, #7daea1, #66af9b);
+  color: #fff;
+  padding: 5rem;
+  border-radius: 0.5rem;
+  display: inline-block;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+
+  /* Typography inspired by Bootstrap's display-4 + fw-bold + text-center */
+  font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-size: auto;
+  font-weight: 300;
+  text-align: center;
+}
+
+
+/* Responsive Design */
+
+/* For small devices (phones, less than 600px) */
+@media (max-width: 600px) {
+  .jumbotron {
+    padding: 1rem;
+    font-size: 0.9rem;
+  }
+
+  .testimonials-section {
+    padding: 1rem;
+    font-size: 1rem;
+  }
+
+  .feature-icon {
+    font-size: 2rem;
+  }
+
+  .book-container {
+    margin: 1rem 0;
+  }
+
+  .gradient-lead {
+    padding: 2rem;
+    font-size: 0.8rem;
+  }
+
+  .testimonialImage {
+    width: 100%;
+    margin-right: 0;
+  }
+}
+
+/* For medium devices (tablets, 600px to 1024px) */
+@media (min-width: 600px) and (max-width: 1024px) {
+  .jumbotron {
+    padding: 1.5rem;
+    font-size: 1rem;
+  }
+
+  .testimonials-section {
+    padding: 1.5rem;
+    font-size: 1.1rem;
+  }
+
+  .feature-icon {
+    font-size: 2.2rem;
+  }
+
+  .gradient-lead {
+    padding: 3rem;
+    font-size: 1rem;
+  }
+
+  .testimonialImage {
+    width: 80%;
+    margin-right: 1rem;
+  }
+}
+
+/* For large devices (desktops, more than 1024px) */
+@media (min-width: 1024px) {
+  .jumbotron {
+    padding: 3rem;
+    font-size: 1.2rem;
+  }
+
+  .testimonials-section {
+    padding: 2rem;
+    font-size: 1.2rem;
+  }
+
+  .feature-icon {
+    font-size: 2.5rem;
+  }
+
+  .gradient-lead {
+    padding: 5rem;
+    font-size: 1.2rem;
+  }
+
+  .testimonialImage {
+    width: 50%;
+    margin-right: 2rem;
+  }
 }
 

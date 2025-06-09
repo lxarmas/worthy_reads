@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Row, Col, Card, Spinner, Alert, Button } from 'react-bootstrap';
+import { Row, Col, Card, Spinner, Alert, } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import Rating from './Rating';
 import './HomePage.css';
@@ -45,8 +45,9 @@ function HomePage() {
 
 
           <Row className="align-items-center justify-content-center my-2">
-            <h2 className="text-black display-4 fw-bold text-center py-3 cool-heading">
-              ABOUT US
+
+            <h2 className="text-black display-6 fw-bold text-center py-3">
+              WELCOME TO WORTHY READS
             </h2>
 
             <Col md={6} className="text-center">
@@ -69,7 +70,7 @@ function HomePage() {
 
           <Row className="align-items-center justify-content-center my-4">
             <Col md={6}>
-              <p className="lead">
+              <p className="lead graient-lead">
                 This site was created for the love of books. I hope you enjoy it and share it with family and friends.
               </p>
             </Col>

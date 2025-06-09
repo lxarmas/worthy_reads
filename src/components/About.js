@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import Nav from './Nav';
-import { Row, Col, Card, Spinner, Alert } from 'react-bootstrap';
+import { Row, Col, } from 'react-bootstrap';
 import './About.css'
 
 function About() {
@@ -46,12 +46,7 @@ function About() {
               animate={{ opacity: 1 }}
               transition={{ duration: 1, delay: 1.5 }}
             >
-              <button
-                className="btn btn-primary"
-                onClick={() => window.location.href = '/books'}
-              >
-                Explore Books
-              </button>
+
 
               <button
                 className="btn btn-outline-light"
