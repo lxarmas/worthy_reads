@@ -1,38 +1,49 @@
 import React, { useState } from 'react';
-import { registerUser } from '../api'; // Ensure the correct path to api.js
+import { useNavigate } from 'react-router-dom';
+import { registerUser } from '../api'; // Ensure this path is correct
 
 function Register() {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState( {
     firstName: '',
     lastName: '',
     email: '',
     password: '',
-  });
-  const [error, setError] = useState('');
+  } );
 
-  const handleChange = (e) => {
+  const [error, setError] = useState( '' );
+  const navigate = useNavigate();
+
+  const handleChange = ( e ) => {
     const { name, value } = e.target;
-    setFormData({
-      ...formData,
+    setFormData( ( prevFormData ) => ( {
+      ...prevFormData,
       [name]: value,
-    });
+    } ) );
   };
 
-  const handleSubmit = async (event) => {
-    event.preventDefault(); // Prevent default form submission
+  const handleSubmit = async ( event ) => {
+    event.preventDefault();
 
     try {
-      const response = await registerUser({
+      const response = await registerUser( {
         first_name: formData.firstName,
         last_name: formData.lastName,
         username: formData.email,
         password: formData.password,
-      });
-      console.log('Registration successful:', response.data);
-      // Redirect or show success message here
-    } catch (error) {
-      console.error('Registration error:', error);
-      setError('Registration failed. Please try again.');
+      } );
+
+      console.log( 'Registration successful:', response.data );
+      localStorage.setItem( 'userId', response.data.user_id );
+
+      navigate( '/books' ); // Redirect to the books page
+    } catch ( error ) {
+      console.error( 'Registration error:', error );
+
+      if ( error.response && error.response.data && error.response.data.error ) {
+        setError( error.response.data.error );
+      } else {
+        setError( 'Registration failed. Please try again.' );
+      }
     }
   };
 
@@ -59,7 +70,7 @@ function Register() {
                   />
                 </div>
 
-                <div className="form-group">
+                <div className="form-group mt-3">
                   <label htmlFor="lastName">Last Name</label>
                   <input
                     type="text"
@@ -73,7 +84,7 @@ function Register() {
                   />
                 </div>
 
-                <div className="form-group">
+                <div className="form-group mt-3">
                   <label htmlFor="email">Email</label>
                   <input
                     type="email"
@@ -87,7 +98,7 @@ function Register() {
                   />
                 </div>
 
-                <div className="form-group">
+                <div className="form-group mt-3">
                   <label htmlFor="password">Password</label>
                   <input
                     type="password"
@@ -103,7 +114,7 @@ function Register() {
 
                 <button
                   type="submit"
-                  className="btn btn-primary btn-block"
+                  className="btn btn-primary btn-block mt-4"
                   style={{
                     backgroundColor: 'rgb(44, 122, 110)',
                     borderColor: 'rgb(44, 122, 110)',
@@ -112,9 +123,13 @@ function Register() {
                   Register
                 </button>
               </form>
+
               {error && <p className="text-danger mt-3">{error}</p>}
+
               <div className="text-center mt-3">
-                <p>Already have an account? <a href="/login">Login here</a></p>
+                <p>
+                  Already have an account? <a href="/login">Login here</a>
+                </p>
               </div>
             </div>
           </div>
