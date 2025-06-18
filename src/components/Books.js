@@ -7,7 +7,6 @@ import { Link } from 'react-router-dom';
 import Rating from './Rating';
 import BookCount from './BookCount';
 import BookDescription from './BookDescription';
-import Nav from './Nav';
 import './Books.css';
 
 function Books() {
@@ -96,7 +95,6 @@ function Books() {
 
   return (
     <Container>
-      <Nav />
       <h2 className="username-color">
         Welcome {user ? `${user.first_name.charAt( 0 ).toUpperCase()}${user.first_name.slice( 1 )}` : "Loading..."}
       </h2>

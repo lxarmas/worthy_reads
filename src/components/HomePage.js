@@ -38,7 +38,6 @@ function HomePage() {
 
   return (
     <main className="container mt-5">
-      <Nav />
 
       <div className="jumbotron text-center p-5 bg-light shadow">
         <div className="container">
@@ -123,11 +122,18 @@ function HomePage() {
                 <Card.Body>
                   <Card.Img
                     variant="top"
-                    src={book.volumeInfo.imageLinks?.thumbnail || 'https://via.placeholder.com/150'}
+                    src={
+                      book.volumeInfo.imageLinks?.extraLarge ||
+                      book.volumeInfo.imageLinks?.large ||
+                      book.volumeInfo.imageLinks?.medium ||
+                      book.volumeInfo.imageLinks?.thumbnail ||
+                      'https://via.placeholder.com/300'
+                    }
                     alt={book.volumeInfo.title}
-                    className="img-fluid clickable-image mb-3"
+                    className="img-fluid clickable-image mb-6"
                     onClick={() => book.volumeInfo.previewLink && window.open( book.volumeInfo.previewLink, '_blank' )}
                   />
+
                   <Card.Title>{book.volumeInfo.title}</Card.Title>
                   <Card.Subtitle className="text-muted">
                     By {book.volumeInfo.authors ? book.volumeInfo.authors.join( ', ' ) : 'Unknown'}
