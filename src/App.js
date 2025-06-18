@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import Nav from './components/Nav';
 import Header from './components/Header';
 import HomePage from './components/HomePage';
 import About from './components/About';
@@ -11,6 +12,7 @@ import CategoryPage from './components/CategoryPage';
 function App() {
   return (
     <Router>
+      <Nav />
       <Header />
       <Routes>
         <Route path="/" element={<HomePage />} />

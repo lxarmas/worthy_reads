@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { loginUser } from '../api';
-import Nav from './Nav';
+
 
 function LogIn() {
   const [email, setEmail] = useState( '' );
@@ -26,20 +26,9 @@ function LogIn() {
 
   return (
     <div className="login-container mt-5">
-      <Nav />
 
-      {/* Styles for placeholder color */}
-      <style>
-        {`
-          #email::placeholder,
-          #password::placeholder {
-            color:rgb(18, 0, 0);
-            opacity: 0.9;
-          }
-        `}
-      </style>
 
-      {/* Bootstrap Icons */}
+
       <link
         rel="stylesheet"
         href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"

@@ -14,7 +14,7 @@ function About() {
 
   return (
     <div style={{ overflowY: 'scroll', height: '100vh' }}>
-      <Nav />
+
       <motion.div
         className="background-image"
         initial={{ opacity: 0 }}
