@@ -74,7 +74,7 @@ function mapToApiFormat( dbData ) {
 
 // API routes
 
-// 📚 Get all books for a user
+//  Get all books for a user
 app.get( '/api/books/:userId', async ( req, res ) => {
   try {
     const books = await fetchDataFromDatabase( req.params.userId );
@@ -84,7 +84,7 @@ app.get( '/api/books/:userId', async ( req, res ) => {
   }
 } );
 
-// 👤 Get user details
+//  Get user details
 app.get( '/api/users/:userId', async ( req, res ) => {
   try {
     const result = await client.query( 'SELECT first_name FROM users WHERE user_id = $1', [req.params.userId] );
@@ -96,7 +96,7 @@ app.get( '/api/users/:userId', async ( req, res ) => {
   }
 } );
 
-// 📚 Get books by category
+//  Get books by category
 app.get( '/api/books/category/:category', async ( req, res ) => {
   try {
     const books = await client.query( 'SELECT * FROM books WHERE $1 = ANY(categories)', [req.params.category] );
@@ -107,7 +107,7 @@ app.get( '/api/books/category/:category', async ( req, res ) => {
   }
 } );
 
-// 📝 Register user
+//  Register user
 app.post( '/api/register', async ( req, res ) => {
   const { username, password, first_name, last_name } = req.body;
   try {
@@ -126,7 +126,7 @@ app.post( '/api/register', async ( req, res ) => {
   }
 } );
 
-// 🔐 Login user
+//  Login user
 app.post( '/api/login', async ( req, res ) => {
   const { username, password } = req.body;
   try {
@@ -147,7 +147,7 @@ app.post( '/api/login', async ( req, res ) => {
   }
 } );
 
-// ➕ Add new book
+//  Add new book
 app.post( '/api/books', async ( req, res ) => {
   const { title, author, user_id } = req.body;
   try {
@@ -174,7 +174,7 @@ app.post( '/api/books', async ( req, res ) => {
   }
 } );
 
-// ⭐ Update book rating
+//  Update book rating
 app.put( '/api/books/:id/rating', async ( req, res ) => {
   try {
     const result = await client.query(
@@ -189,7 +189,7 @@ app.put( '/api/books/:id/rating', async ( req, res ) => {
   }
 } );
 
-// ❌ Delete book
+//  Delete book
 app.delete( '/api/books/:book_id', async ( req, res ) => {
   try {
     await client.query( 'DELETE FROM books WHERE book_id = $1', [req.params.book_id] );
@@ -200,7 +200,7 @@ app.delete( '/api/books/:book_id', async ( req, res ) => {
   }
 } );
 
-// 🔧 Helper Functions
+//  Helper Functions
 
 async function fetchDataFromDatabase( user_id ) {
   const result = await client.query( 'SELECT * FROM books WHERE user_id = $1', [user_id] );
@@ -228,7 +228,7 @@ function handleError( res, error ) {
   res.status( 500 ).json( { error: 'Internal Server Error' } );
 }
 
-// 🚀 Start server
+// Start server
 app.listen( port, () => {
   console.log( `📡 Server running at http://localhost:${port}` );
 } );

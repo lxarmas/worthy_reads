@@ -3,7 +3,6 @@ import { Row, Col, Card, Spinner, Alert, } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import Rating from './Rating';
 import './HomePage.css';
-import Nav from './Nav';
 import axios from 'axios';
 
 function HomePage() {
