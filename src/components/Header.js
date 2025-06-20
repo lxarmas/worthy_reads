@@ -12,8 +12,8 @@ function Header() {
           className="header-logo"
         />
         <div className="header-text">
-          <p className="headerTitle">WORTHY READS</p>
-          <p className="headerTagline">“A library is a hospital for the mind.”</p>
+          <h1 className="headerTitle">WORTHY READS</h1>
+          <h2 className="headerTagline">“A library is a hospital for the mind.”</h2>
         </div>
       </div>
     </header>

@@ -44,9 +44,10 @@ function HomePage() {
 
           <Row className="align-items-center justify-content-center my-2">
 
-            <h2 className="text-black display-6 fw-bold text-center py-3">
-              WELCOME TO WORTHY READS
+            <h2 className="section-title text-primary  pb-5 fs-1">
+              Welcome to Worthy Reads
             </h2>
+
 
             <Col md={6} className="text-center">
               <img
@@ -56,10 +57,12 @@ function HomePage() {
               />
             </Col>
             <Col md={6} className="d-flex flex-column justify-content-center">
-              <p className="lead gradient-lead">
-                Books have always been a source of inspiration and knowledge in my life.
+              <p className="lead gradient-lead  fst-italic fs-3">
+                " Books have always been a source of inspiration and knowledge in my life.
                 I wanted to create a space where readers can not only find their next great read
-                but also connect with a community of like-minded individuals.
+                but also connect with a community of like-minded individuals."
+                <br />
+                <strong className="text-primary pb-5">Alejandro Armas</strong>
               </p>
 
             </Col>
@@ -68,7 +71,7 @@ function HomePage() {
 
           <Row className="align-items-center justify-content-center my-4">
             <Col md={6}>
-              <p className="lead graient-lead">
+              <p className="lead graient-lead text-black fs-2">
                 This site was created for the love of books. I hope you enjoy it and share it with family and friends.
               </p>
             </Col>
@@ -82,22 +85,22 @@ function HomePage() {
           </Row>
 
           <div className="features-section my-5">
-            <h2 className="section-title text-primary">Join the Club</h2>
-            <Row className="text-center">
+            <h2 className="section-title text-primary pb-5 fs-1">Join the Club</h2>
+            <Row className="text-center pb-5">
               <Col md={4}>
-                <i className="fas fa-search feature-icon text-info mb-3"></i>
-                <h5>Search Books</h5>
-                <p>Find your favorite books by title or author.</p>
+                <i className="fas fa-search feature-icon text-primary mb-3"></i>
+                <h5 className='fw-bold text-white'>Search Books</h5>
+                <p className="lead graient-lead fs-4">Find your favorite books by title or author.</p>
               </Col>
               <Col md={4}>
-                <i className="fas fa-users feature-icon text-info mb-3"></i>
-                <h5>Community</h5>
-                <p>Connect with other book lovers and share reviews.</p>
+                <i className="fas fa-users feature-icon text-primary mb-3"></i>
+                <h5 className='fw-bold text-white'>Community</h5>
+                <p className="lead graient-lead fs-4">Connect with other book lovers and share reviews.</p>
               </Col>
               <Col md={4}>
-                <i className="fas fa-bookmark feature-icon text-info mb-3"></i>
-                <h5>Bookmarks</h5>
-                <p>Save books to your personal collection.</p>
+                <i className="fas fa-bookmark feature-icon text-primary mb-3"></i>
+                <h5 className='fw-bold text-white'>Bookmarks</h5>
+                <p className="lead graient-lead fs-4">Save books to your personal collection.</p>
               </Col>
             </Row>
           </div>
