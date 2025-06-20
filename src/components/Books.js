@@ -94,13 +94,14 @@ function Books() {
   };
 
   return (
-    <Container>
+    <Container className="px-3">
       <h2 className="username-color">
         Welcome {user ? `${user.first_name.charAt( 0 ).toUpperCase()}${user.first_name.slice( 1 )}` : "Loading..."}
       </h2>
 
+      {/* === Responsive Add Book Form === */}
       <Form className="book-card" onSubmit={handleAddBook}>
-        <Form.Group controlId="formTitle">
+        <Form.Group controlId="formTitle" className="w-100">
           <Form.Label>Title:</Form.Label>
           <Form.Control
             type="text"
@@ -109,7 +110,8 @@ function Books() {
             required
           />
         </Form.Group>
-        <Form.Group controlId="formAuthor" className="mt-2">
+
+        <Form.Group controlId="formAuthor" className="mt-2 w-100">
           <Form.Label>Author:</Form.Label>
           <Form.Control
             type="text"
@@ -118,33 +120,33 @@ function Books() {
             required
           />
         </Form.Group>
-        <Button variant="primary" type="submit" className="mt-3">Add Book</Button>
+
+        <Button variant="primary" type="submit" className="mt-3">
+          Add Book
+        </Button>
       </Form>
 
+      {/* === Book Count + Cards === */}
       <BookCount count={bookCount || books.length} />
-
       {loading ? (
         <Spinner animation="border" className="mt-3" />
       ) : (
         <>
           {error && <Alert variant="danger" className="mt-3">{error}</Alert>}
-          <Row className="mt-3">
-
+          <Row className="mt-3 book-list justify-content-center">
             {books.map( ( book ) => (
-              <Col sm={6} md={4} lg={3} key={book.book_id} className="mb-3">
+              <Col sm={12} md={6} lg={4} key={book.book_id} className="mb-3">
                 <Card className="book-container">
                   <Card.Body className="card-body">
                     <div className="book-info">
                       <div className="book-details">
-                        {/* Flex container to align elements */}
                         <div className="d-flex justify-content-between align-items-center">
                           <div className="title-author">
                             <Card.Title>{book.title}</Card.Title>
                             <Card.Subtitle className="author-name">By {book.author}</Card.Subtitle>
                           </div>
-                          {/* Move the button to the right */}
                           <Button
-                            className='question-button'
+                            className="question-button"
                             onClick={() => toggleDescription( book.book_id )}
                             style={{ all: 'unset' }}
                           >
@@ -154,11 +156,11 @@ function Books() {
 
                         <img
                           srcSet={`
-          ${book.image_link}-small.jpg 500w,
-          ${book.image_link}-medium.jpg 1000w,
-          ${book.image_link}-large.jpg 1500w,
-          ${book.image_link}-xlarge.jpg 3000w
-        `}
+                        ${book.image_link}-small.jpg 500w,
+                        ${book.image_link}-medium.jpg 1000w,
+                        ${book.image_link}-large.jpg 1500w,
+                        ${book.image_link}-xlarge.jpg 3000w
+                      `}
                           sizes="(max-width: 600px) 500px, (max-width: 1200px) 1000px, 1500px"
                           src={`${book.image_link}-x-large.jpg`}
                           alt={book.title}
@@ -166,16 +168,14 @@ function Books() {
                           onClick={() => book.previewLink && window.open( book.previewLink, '_blank' )}
                         />
 
-                        <div className="rating-title-author">
-                          <div className="rating-stars">
-                            <Rating
-                              initialRating={book.rating || 0}
-                              onChange={( rate ) => handleRatingChange( book.book_id, rate )}
-                            />
-                          </div>
+                        <div className="rating-title-author mt-2">
+                          <Rating
+                            initialRating={book.rating || 0}
+                            onChange={( rate ) => handleRatingChange( book.book_id, rate )}
+                          />
                         </div>
 
-                        {book.categories && book.categories.length > 0 && (
+                        {book.categories?.length > 0 && (
                           <div className="book-categories">
                             <strong>Categories: </strong>
                             {book.categories.map( ( category, index ) => (
@@ -187,7 +187,7 @@ function Books() {
                           </div>
                         )}
 
-                        <div className="button-group">
+                        <div className="button-group mt-2">
                           <Button
                             className="custom-button custom-button-primary"
                             onClick={() => handleDeleteBook( book.book_id )}
@@ -207,7 +207,6 @@ function Books() {
                       </div>
                     )}
                   </Card.Body>
-
                 </Card>
               </Col>
             ) )}
@@ -215,6 +214,7 @@ function Books() {
         </>
       )}
     </Container>
+
   );
 }
 
