@@ -1,3 +1,5 @@
+const bcrypt = require('bcrypt');
+const saltRounds = 10;
 const express = require( 'express' );
 const bodyParser = require( 'body-parser' );
 const session = require( 'express-session' );
@@ -9,6 +11,7 @@ const path = require( 'path' );
 
 const app = express();
 const port = process.env.PORT || 3000;
+
 
 // Secure session secret
 const secretKey = crypto.randomBytes( 32 ).toString( 'hex' );
@@ -108,44 +111,49 @@ app.get( '/api/books/category/:category', async ( req, res ) => {
 } );
 
 //  Register user
-app.post( '/api/register', async ( req, res ) => {
+app.post('/api/register', async (req, res) => {
   const { username, password, first_name, last_name } = req.body;
   try {
-    const checkUser = await client.query( 'SELECT * FROM users WHERE username = $1', [username] );
-    if ( checkUser.rows.length > 0 ) {
-      return res.status( 400 ).json( { error: 'Username already exists' } );
+    const checkUser = await client.query('SELECT * FROM users WHERE username = $1', [username]);
+    if (checkUser.rows.length > 0) {
+      return res.status(400).json({ error: 'Username already exists' });
     }
+
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
 
     const result = await client.query(
       'INSERT INTO users (username, password, first_name, last_name) VALUES ($1, $2, $3, $4) RETURNING user_id',
-      [username, password, first_name, last_name]
+      [username, hashedPassword, first_name, last_name]
     );
-    res.json( { user_id: result.rows[0].user_id } );
-  } catch ( error ) {
-    handleError( res, error );
+    res.json({ user_id: result.rows[0].user_id });
+  } catch (error) {
+    handleError(res, error);
   }
-} );
+});
+
 
 //  Login user
-app.post( '/api/login', async ( req, res ) => {
+app.post('/api/login', async (req, res) => {
   const { username, password } = req.body;
   try {
-    const result = await client.query( 'SELECT * FROM users WHERE username = $1', [username] );
-    if ( result.rows.length === 0 ) {
-      return res.status( 400 ).json( { error: 'User not found' } );
+    const result = await client.query('SELECT * FROM users WHERE username = $1', [username]);
+    if (result.rows.length === 0) {
+      return res.status(400).json({ error: 'User not found' });
     }
 
     const user = result.rows[0];
-    if ( password !== user.password ) {
-      return res.status( 400 ).json( { error: 'Incorrect password' } );
+    const match = await bcrypt.compare(password, user.password);
+    if (!match) {
+      return res.status(400).json({ error: 'Incorrect password' });
     }
 
     req.session.user_id = user.user_id;
-    res.json( { user_id: user.user_id } );
-  } catch ( error ) {
-    handleError( res, error );
+    res.json({ user_id: user.user_id });
+  } catch (error) {
+    handleError(res, error);
   }
-} );
+});
+
 
 //  Add new book
 app.post( '/api/books', async ( req, res ) => {
