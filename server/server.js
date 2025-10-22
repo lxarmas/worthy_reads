@@ -153,6 +153,34 @@ app.post('/api/login', async (req, res) => {
     handleError(res, error);
   }
 });
+//Reset password
+
+
+app.post('/api/request-password-reset', async (req, res) => {
+  const { username } = req.body;
+  try {
+    const userResult = await client.query('SELECT user_id FROM users WHERE username = $1', [username]);
+    if (userResult.rows.length === 0) {
+      return res.status(400).json({ error: 'User not found' });
+    }
+
+    const userId = userResult.rows[0].user_id;
+    const token = crypto.randomBytes(32).toString('hex');
+    const expiresAt = new Date(Date.now() + 3600000); // 1 hour expiry
+
+    // Save token to DB
+    await client.query(
+      'INSERT INTO password_resets (user_id, token, expires_at) VALUES ($1, $2, $3)',
+      [userId, token, expiresAt]
+    );
+
+    // TODO: send email with `token` link to user
+
+    res.json({ message: 'Password reset link sent if user exists' });
+  } catch (error) {
+    handleError(res, error);
+  }
+});
 
 
 //  Add new book
