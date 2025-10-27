@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { loginUser } from '../api';
 
 function LogIn() {
@@ -18,13 +18,10 @@ function LogIn() {
       navigate('/books');
     } catch (error) {
       console.error('Login error:', error.response ? error.response.data : error.message);
-
-      // Safely extract string message
       const errorMessage =
         error.response?.data?.error ||
         error.message ||
         'Login failed. Please try again.';
-
       setError(errorMessage);
     }
   };
@@ -119,6 +116,19 @@ function LogIn() {
               )}
 
               <div className="text-center mt-4">
+                <p>
+                  <Link
+                    to="/forgot-password"
+                    style={{
+                      color: '#ffffff',
+                      textDecoration: 'underline',
+                      fontWeight: 'bold',
+                    }}
+                  >
+                    Forgot Password?
+                  </Link>
+                </p>
+
                 <p>
                   Don’t have an account?{' '}
                   <a

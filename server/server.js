@@ -8,7 +8,7 @@ const axios = require('axios');
 const { Client } = require('pg');
 const cors = require('cors');
 const path = require('path');
-require('dotenv').config(); // Load environment variables
+require('dotenv').config();
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -22,7 +22,7 @@ const allowedOrigins = [
   'https://main.d1hr2gomzak89g.amplifyapp.com'
 ];
 
-// ✅ CORS setup with better handling
+// ✅ CORS setup
 app.use(
   cors({
     origin: function (origin, callback) {
@@ -46,7 +46,7 @@ app.use(
     resave: false,
     saveUninitialized: false,
     cookie: {
-      secure: process.env.NODE_ENV === 'production', // ✅ Secure cookies only in production
+      secure: process.env.NODE_ENV === 'production',
       httpOnly: true,
       sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
     },
@@ -60,7 +60,7 @@ const client = new Client({
   database: process.env.DB_NAME || 'book_notes_db',
   password: process.env.DB_PASSWORD || 'new_password',
   port: process.env.DB_PORT || 5432,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false, // ✅ Fix for AWS
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
 });
 
 client
@@ -128,7 +128,6 @@ app.post('/api/register', async (req, res) => {
     if (checkUser.rows.length > 0) return res.status(400).json({ error: 'Username already exists' });
 
     const hashedPassword = await bcrypt.hash(password, saltRounds);
-
     const result = await client.query(
       'INSERT INTO users (username, password, first_name, last_name) VALUES ($1, $2, $3, $4) RETURNING user_id',
       [username, hashedPassword, first_name, last_name]
@@ -141,42 +140,28 @@ app.post('/api/register', async (req, res) => {
 });
 
 // Login user
-
-
 app.post('/api/login', async (req, res) => {
   const { username, password } = req.body;
-
   try {
     const result = await client.query('SELECT * FROM users WHERE username = $1', [username]);
-    if (result.rows.length === 0) {
-      return res.status(400).json({ error: 'User not found' });
-    }
+    if (result.rows.length === 0) return res.status(400).json({ error: 'User not found' });
 
     const user = result.rows[0];
+    const match = user.password.startsWith('$2b$')
+      ? await bcrypt.compare(password, user.password)
+      : password === user.password;
 
-    // Check if password is hashed (starts with $2b$)
-    let match = false;
-    if (user.password.startsWith('$2b$')) {
-      match = await bcrypt.compare(password, user.password);
-    } else {
-      match = password === user.password; // plain text fallback
-    }
-
-    if (!match) {
-      return res.status(400).json({ error: 'Incorrect password' });
-    }
+    if (!match) return res.status(400).json({ error: 'Incorrect password' });
 
     req.session.user_id = user.user_id;
     res.json({ user_id: user.user_id });
-
   } catch (error) {
     console.error('Login error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-
-// Password reset (request)
+// Request password reset
 app.post('/api/request-password-reset', async (req, res) => {
   const { username } = req.body;
   try {
@@ -193,10 +178,34 @@ app.post('/api/request-password-reset', async (req, res) => {
       expiresAt,
     ]);
 
-    // TODO: Send email here
     res.json({ message: 'Password reset link sent if user exists' });
   } catch (error) {
     handleError(res, error);
+  }
+});
+
+// ✅ Forgot Password - Generate Temporary Password
+app.post('/api/forgot-password', async (req, res) => {
+  const { email } = req.body;
+
+  try {
+    const result = await client.query('SELECT * FROM users WHERE username = $1', [email]);
+    if (result.rows.length === 0) {
+      return res.status(200).json({ message: 'If that email exists, a reset password has been sent.' });
+    }
+
+    const user = result.rows[0];
+    const tempPassword = crypto.randomBytes(4).toString('hex');
+    const hashedPassword = await bcrypt.hash(tempPassword, 10);
+
+    await client.query('UPDATE users SET password = $1 WHERE username = $2', [hashedPassword, email]);
+
+    console.log(`Temporary password for ${email}: ${tempPassword}`);
+
+    res.json({ message: 'Temporary password generated and sent (check server logs).' });
+  } catch (error) {
+    console.error('Error in /api/forgot-password:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 

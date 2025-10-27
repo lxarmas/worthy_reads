@@ -8,6 +8,7 @@ import LogIn from './components/LogIn';
 import Register from './components/Register';
 import Books from './components/Books';
 import CategoryPage from './components/CategoryPage';
+import ForgotPassword from './components/ForgotPassword';
 
 function App() {
   return (
@@ -19,6 +20,7 @@ function App() {
         <Route path='/about' element={<About />} />
         <Route path='/login' element={<LogIn />} />
         <Route path='/register' element={<Register />} />
+         <Route path="/forgot-password" element={<ForgotPassword />} />  {/* ✅ new route */}
         <Route path='/books' element={<Books />} />
         <Route path='/category/:categoryName' element={<CategoryPage />} />
       </Routes>
