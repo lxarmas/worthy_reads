@@ -60,10 +60,11 @@ const client = new Client({
   database: process.env.DB_NAME || 'book_notes_db',
   password: process.env.DB_PASSWORD || 'new_password',
   port: process.env.DB_PORT || 5432,
-  ssl: process.env.NODE_ENV === 'production' || process.env.DB_HOST !== 'localhost'
-    ? { rejectUnauthorized: false }
-    : false,
+  ssl: (process.env.NODE_ENV === 'production' || process.env.DB_HOST !== 'localhost') 
+       ? { rejectUnauthorized: false } 
+       : false,
 });
+
 
 client
   .connect()
