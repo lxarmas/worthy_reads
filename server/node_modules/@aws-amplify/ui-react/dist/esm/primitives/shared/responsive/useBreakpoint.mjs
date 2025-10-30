@@ -2,6 +2,7 @@ import * as React from 'react';
 import { getMediaQueries } from './getMediaQueries.mjs';
 
 // Inspiration for getMediaQueries and useBreakpoint
+// comes from https://github.com/iiroj/use-breakpoint/
 const useIsomorphicEffect = typeof window === 'undefined' ? React.useEffect : React.useLayoutEffect;
 const useBreakpoint = ({ breakpoints, defaultBreakpoint, }) => {
     const supportMatchMedia = typeof window !== 'undefined' && typeof window.matchMedia !== 'undefined';
