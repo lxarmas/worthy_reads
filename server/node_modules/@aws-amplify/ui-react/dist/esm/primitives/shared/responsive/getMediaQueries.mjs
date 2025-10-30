@@ -1,6 +1,7 @@
 import { objectKeys } from '../utils.mjs';
 
 // Inspiration for getMediaQueries and useBreakpoint
+// comes from https://github.com/iiroj/use-breakpoint/
 const getMediaQueries = ({ breakpoints }) => {
     const sortedBreakpoints = objectKeys(breakpoints).sort((a, b) => breakpoints[b] - breakpoints[a]);
     return sortedBreakpoints.map((breakpoint, index) => {
