@@ -47,8 +47,6 @@
   "proxy": "http://localhost:3000",
   "devDependencies": {
     "nodemon": "^3.1.4"
-  },"engines": {
-  "node": ">=18.0.0"
-}
+  }
 
 }
