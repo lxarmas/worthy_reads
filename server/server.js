@@ -5,7 +5,7 @@ const bodyParser = require('body-parser');
 const session = require('express-session');
 const crypto = require('crypto');
 const axios = require('axios');
-const { Client } = require('pg');
+const { Pool } = require('pg');  // ✅ CHANGED: Pool instead of Client
 const cors = require('cors');
 const path = require('path');
 require('dotenv').config();
@@ -53,22 +53,14 @@ app.use(
   })
 );
 
-// ✅ PostgreSQL setup
-const client = new Client({
-  user: process.env.DB_USER || 'postgres',
-  host: process.env.DB_HOST || 'localhost',
-  database: process.env.DB_NAME || 'book_notes_db',
-  password: process.env.DB_PASSWORD || 'new_password',
-  port: process.env.DB_PORT || 5432,
-  ssl: (process.env.NODE_ENV === 'production' || process.env.DB_HOST !== 'localhost') 
-       ? { rejectUnauthorized: false } 
-       : false,
+// ✅ PostgreSQL setup (Neon serverless + Pool)
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false }
 });
 
-
-client
-  .connect()
-  .then(() => console.log('✅ Connected to PostgreSQL'))
+pool.connect()
+  .then(() => console.log('✅ Connected to Neon PostgreSQL'))
   .catch((err) => console.error('❌ PostgreSQL connection error:', err));
 
 // Utility functions
@@ -95,7 +87,7 @@ function mapToApiFormat(dbData) {
 // Get all books for a user
 app.get('/api/books/:userId', async (req, res) => {
   try {
-    const result = await client.query('SELECT * FROM books WHERE user_id = $1', [req.params.userId]);
+    const result = await pool.query('SELECT * FROM books WHERE user_id = $1', [req.params.userId]);  // ✅ pool.query
     res.json(mapToApiFormat(result.rows));
   } catch (error) {
     handleError(res, error);
@@ -105,7 +97,7 @@ app.get('/api/books/:userId', async (req, res) => {
 // Get user details
 app.get('/api/users/:userId', async (req, res) => {
   try {
-    const result = await client.query('SELECT first_name FROM users WHERE user_id = $1', [req.params.userId]);
+    const result = await pool.query('SELECT first_name FROM users WHERE user_id = $1', [req.params.userId]);  // ✅ pool.query
     if (result.rows.length > 0) res.json(result.rows[0]);
     else res.status(404).json({ error: 'User not found' });
   } catch (error) {
@@ -116,7 +108,7 @@ app.get('/api/users/:userId', async (req, res) => {
 // Get books by category
 app.get('/api/books/category/:category', async (req, res) => {
   try {
-    const result = await client.query('SELECT * FROM books WHERE $1 = ANY(categories)', [req.params.category]);
+    const result = await pool.query('SELECT * FROM books WHERE $1 = ANY(categories)', [req.params.category]);  // ✅ pool.query
     res.json(result.rows);
   } catch (error) {
     handleError(res, error);
@@ -127,11 +119,11 @@ app.get('/api/books/category/:category', async (req, res) => {
 app.post('/api/register', async (req, res) => {
   const { username, password, first_name, last_name } = req.body;
   try {
-    const checkUser = await client.query('SELECT * FROM users WHERE username = $1', [username]);
+    const checkUser = await pool.query('SELECT * FROM users WHERE username = $1', [username]);  // ✅ pool.query
     if (checkUser.rows.length > 0) return res.status(400).json({ error: 'Username already exists' });
 
     const hashedPassword = await bcrypt.hash(password, saltRounds);
-    const result = await client.query(
+    const result = await pool.query(  // ✅ pool.query
       'INSERT INTO users (username, password, first_name, last_name) VALUES ($1, $2, $3, $4) RETURNING user_id',
       [username, hashedPassword, first_name, last_name]
     );
@@ -146,7 +138,7 @@ app.post('/api/register', async (req, res) => {
 app.post('/api/login', async (req, res) => {
   const { username, password } = req.body;
   try {
-    const result = await client.query('SELECT * FROM users WHERE username = $1', [username]);
+    const result = await pool.query('SELECT * FROM users WHERE username = $1', [username]);  // ✅ pool.query
     if (result.rows.length === 0) return res.status(400).json({ error: 'User not found' });
 
     const user = result.rows[0];
@@ -168,14 +160,14 @@ app.post('/api/login', async (req, res) => {
 app.post('/api/request-password-reset', async (req, res) => {
   const { username } = req.body;
   try {
-    const userResult = await client.query('SELECT user_id FROM users WHERE username = $1', [username]);
+    const userResult = await pool.query('SELECT user_id FROM users WHERE username = $1', [username]);  // ✅ pool.query
     if (userResult.rows.length === 0) return res.status(400).json({ error: 'User not found' });
 
     const userId = userResult.rows[0].user_id;
     const token = crypto.randomBytes(32).toString('hex');
     const expiresAt = new Date(Date.now() + 3600000);
 
-    await client.query('INSERT INTO password_resets (user_id, token, expires_at) VALUES ($1, $2, $3)', [
+    await pool.query('INSERT INTO password_resets (user_id, token, expires_at) VALUES ($1, $2, $3)', [  // ✅ pool.query
       userId,
       token,
       expiresAt,
@@ -192,7 +184,7 @@ app.post('/api/forgot-password', async (req, res) => {
   const { email } = req.body;
 
   try {
-    const result = await client.query('SELECT * FROM users WHERE username = $1', [email]);
+    const result = await pool.query('SELECT * FROM users WHERE username = $1', [email]);  // ✅ pool.query
     if (result.rows.length === 0) {
       return res.status(200).json({ message: 'If that email exists, a reset password has been sent.' });
     }
@@ -201,7 +193,7 @@ app.post('/api/forgot-password', async (req, res) => {
     const tempPassword = crypto.randomBytes(4).toString('hex');
     const hashedPassword = await bcrypt.hash(tempPassword, 10);
 
-    await client.query('UPDATE users SET password = $1 WHERE username = $2', [hashedPassword, email]);
+    await pool.query('UPDATE users SET password = $1 WHERE username = $2', [hashedPassword, email]);  // ✅ pool.query
 
     console.log(`Temporary password for ${email}: ${tempPassword}`);
 
@@ -219,7 +211,7 @@ app.post('/api/books', async (req, res) => {
     const bookData = await fetchBookData(title, author);
     if (!bookData) return res.status(404).json({ error: 'Book not found' });
 
-    await client.query(
+    await pool.query(  // ✅ pool.query
       'INSERT INTO books (title, author, image_link, user_id, description_book, categories, preview_link) VALUES ($1, $2, $3, $4, $5, $6::text[], $7)',
       [
         bookData.title,
@@ -232,7 +224,7 @@ app.post('/api/books', async (req, res) => {
       ]
     );
 
-    const result = await client.query('SELECT * FROM books WHERE user_id = $1', [user_id]);
+    const result = await pool.query('SELECT * FROM books WHERE user_id = $1', [user_id]);  // ✅ pool.query
     res.status(201).json(result.rows);
   } catch (error) {
     handleError(res, error);
@@ -242,7 +234,7 @@ app.post('/api/books', async (req, res) => {
 // Update rating
 app.put('/api/books/:id/rating', async (req, res) => {
   try {
-    const result = await client.query(
+    const result = await pool.query(  // ✅ pool.query
       'UPDATE books SET rating = $1 WHERE book_id = $2 RETURNING *',
       [parseInt(req.body.rating), req.params.id]
     );
@@ -256,7 +248,7 @@ app.put('/api/books/:id/rating', async (req, res) => {
 // Delete book
 app.delete('/api/books/:book_id', async (req, res) => {
   try {
-    await client.query('DELETE FROM books WHERE book_id = $1', [req.params.book_id]);
+    await pool.query('DELETE FROM books WHERE book_id = $1', [req.params.book_id]);  // ✅ pool.query
     res.json({ success: true, message: 'Book deleted' });
   } catch (error) {
     handleError(res, error);
