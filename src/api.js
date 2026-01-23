@@ -1,7 +1,8 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || 'http://localhost:3000', // Default to local during development
+  baseURL: process.env.REACT_APP_API_URL || 
+    (process.env.NODE_ENV === 'development' ? 'http://localhost:5000' : ''), // Local backend port
   withCredentials: true,
 });
 
@@ -35,8 +36,6 @@ export const fetchBooksByCategory = async (category) => {
   }
 };
 
-// 🆕 Forgot Password function
 export const sendResetEmail = async (data) => {
-  // `data` should contain { email: 'user@example.com' }
   return await api.post('/api/forgot-password', data);
 };
