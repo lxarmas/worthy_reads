@@ -9,27 +9,21 @@ const { Pool } = require('pg');
 const cors = require('cors');
 const path = require('path');
 
-// ❌ REMOVE: dotenv breaks Render production
-// if (process.env.NODE_ENV !== 'production') {
-//   require('dotenv').config();
-// }
-
 const app = express();
 const port = process.env.PORT || 3000;
 
-// 🔒 Secure secrets (Render env vars)
+// 🔒 Secure secrets
 const secretKey = process.env.SESSION_SECRET || 
                   process.env.JWT_SECRET || 
                   crypto.randomBytes(32).toString('hex');
 
 const allowedOrigins = [
-  'http://localhost:3000',  // React dev
-  'http://localhost:3001',  // Custom ports
+  'http://localhost:3000',
+  'http://localhost:3001',
   'https://main.d1hr2gomzak89g.amplifyapp.com',
-  // Add: 'https://worthyreads-frontend.onrender.com'
+  'https://worthy-reads.onrender.com'  // 👈 ADD YOUR FRONTEND
 ];
 
-// 🚀 Optimized CORS
 app.use(cors({
   origin: (origin, callback) => {
     if (!origin || allowedOrigins.includes(origin)) {
@@ -41,12 +35,10 @@ app.use(cors({
   credentials: true,
 }));
 
-// ⚡ Modern middleware (no bodyParser needed)
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 
-// 🔐 Production-ready session
 app.use(session({
   secret: secretKey,
   resave: false,
@@ -55,43 +47,39 @@ app.use(session({
     secure: process.env.NODE_ENV === 'production',
     httpOnly: true,
     sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-    maxAge: 1000 * 60 * 60 * 24 * 7  // 7 days
+    maxAge: 1000 * 60 * 60 * 24 * 7
   }
 }));
 
-// 🗄️ Neon PostgreSQL Pool (Render + Local)
+// 🗄️ Neon PostgreSQL Pool (FIXED - no test close)
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: { rejectUnauthorized: false },
-  max: 20,  // Connection pool
+  max: 20,
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 2000,
 });
 
-// 🧪 Test connection
-pool.connect()
+// ✅ Test ONCE on startup (don't close pool!)
+pool.query('SELECT NOW()')
   .then(() => console.log('✅ Neon PostgreSQL connected'))
-  .catch(err => console.error('❌ DB Error:', err))
-  .finally(() => pool.end());  // Close test connection
+  .catch(err => console.error('❌ DB Error:', err));
 
-// 🔥 YOUR EXISTING ROUTES (unchanged)
-app.get('/api/books/:userId', async (req, res) => { /* your code */ });
-app.post('/api/register', async (req, res) => { /* your code */ });
-// ... all routes ...
+// 🔥 ALL YOUR ROUTES HERE (unchanged)
+app.get('/api/books/:userId', async (req, res) => { /* existing code */ });
+app.post('/api/register', async (req, res) => { /* existing code */ });
+// ... rest of routes ...
 
-// 🛠️ Utilities (unchanged)
 function handleError(res, error) {
   console.error('Server Error:', error);
   res.status(500).json({ error: 'Internal Server Error' });
 }
 
-// 🚀 Production-ready server
 const server = app.listen(port, () => {
   console.log(`📡 Server live on port ${port} (${process.env.NODE_ENV || 'development'})`);
   console.log(`🔗 DB: ${process.env.DATABASE_URL ? 'Connected' : 'Local dev'}`);
 });
 
-// Graceful shutdown
 process.on('SIGTERM', () => {
   console.log('🛑 Graceful shutdown');
   server.close(() => {
