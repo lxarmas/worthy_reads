@@ -8,7 +8,7 @@ const axios = require('axios');
 const { Pool } = require('pg');  // ✅ CHANGED: Pool instead of Client
 const cors = require('cors');
 const path = require('path');
-require('dotenv').config();
+
 
 const app = express();
 const port = process.env.PORT || 3000;
