@@ -1,7 +1,6 @@
 const bcrypt = require('bcrypt');
 const saltRounds = 10;
 const express = require('express');
-const bodyParser = require('body-parser');
 const session = require('express-session');
 const crypto = require('crypto');
 const axios = require('axios');
@@ -12,16 +11,14 @@ const path = require('path');
 const app = express();
 const port = process.env.PORT || 3000;
 
-// 🔒 Secure secrets
-const secretKey = process.env.SESSION_SECRET || 
-                  process.env.JWT_SECRET || 
-                  crypto.randomBytes(32).toString('hex');
+// 🔒 Secure secrets - use JWT_SECRET from Render
+const secretKey = process.env.SESSION_SECRET || process.env.JWT_SECRET || crypto.randomBytes(32).toString('hex');
 
 const allowedOrigins = [
   'http://localhost:3000',
   'http://localhost:3001',
   'https://main.d1hr2gomzak89g.amplifyapp.com',
-  'https://worthy-reads.onrender.com'  // 👈 ADD YOUR FRONTEND
+  'https://worthy-reads.onrender.com'
 ];
 
 app.use(cors({
@@ -51,24 +48,20 @@ app.use(session({
   }
 }));
 
-// 🔧 DEBUG LOGGING - shows exactly what DATABASE_URL contains
-console.log('🔧 DEBUG: process.env.NODE_ENV:', process.env.NODE_ENV);
-console.log('🔧 DEBUG: DATABASE_URL exists?', !!process.env.DATABASE_URL);
-console.log('🔧 DEBUG: DATABASE_URL length:', process.env.DATABASE_URL ? process.env.DATABASE_URL.length : 0);
-console.log('🔧 DEBUG: DATABASE_URL starts with?', process.env.DATABASE_URL ? process.env.DATABASE_URL.substring(0, 50) + '...' : 'MISSING');
-console.log('🔧 DEBUG: DATABASE_URL contains "psql"?', process.env.DATABASE_URL ? process.env.DATABASE_URL.includes('psql') : false);
-console.log('🔧 DEBUG: DATABASE_URL contains "postgresql://"?', process.env.DATABASE_URL ? process.env.DATABASE_URL.includes('postgresql://') : false);
-
-// 🗄️ Neon PostgreSQL Pool
+// 🔥 FIXED PG CONNECTION - explicit params bypass connectionString parsing bug
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
+  host: 'ep-holy-fog-afyq354l-pooler.c-2.us-west-2.aws.neon.tech',
+  port: 5432,
+  user: 'neondb_owner',
+  password: 'npg_eQyJvGLPMj15',
+  database: 'neondb',
   ssl: { rejectUnauthorized: false },
   max: 20,
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 2000,
 });
 
-// ✅ Test ONCE on startup (don't close pool!)
+// ✅ Test connection on startup
 pool.query('SELECT NOW()')
   .then(() => console.log('✅ Neon PostgreSQL connected'))
   .catch(err => console.error('❌ DB Error:', err));
@@ -84,7 +77,6 @@ function handleError(res, error) {
 
 const server = app.listen(port, () => {
   console.log(`📡 Server live on port ${port} (${process.env.NODE_ENV || 'development'})`);
-  console.log(`🔗 DB: ${process.env.DATABASE_URL ? 'Connected' : 'Local dev'}`);
 });
 
 process.on('SIGTERM', () => {
