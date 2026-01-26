@@ -51,7 +51,15 @@ app.use(session({
   }
 }));
 
-// 🗄️ Neon PostgreSQL Pool (FIXED - no test close)
+// 🔧 DEBUG LOGGING - shows exactly what DATABASE_URL contains
+console.log('🔧 DEBUG: process.env.NODE_ENV:', process.env.NODE_ENV);
+console.log('🔧 DEBUG: DATABASE_URL exists?', !!process.env.DATABASE_URL);
+console.log('🔧 DEBUG: DATABASE_URL length:', process.env.DATABASE_URL ? process.env.DATABASE_URL.length : 0);
+console.log('🔧 DEBUG: DATABASE_URL starts with?', process.env.DATABASE_URL ? process.env.DATABASE_URL.substring(0, 50) + '...' : 'MISSING');
+console.log('🔧 DEBUG: DATABASE_URL contains "psql"?', process.env.DATABASE_URL ? process.env.DATABASE_URL.includes('psql') : false);
+console.log('🔧 DEBUG: DATABASE_URL contains "postgresql://"?', process.env.DATABASE_URL ? process.env.DATABASE_URL.includes('postgresql://') : false);
+
+// 🗄️ Neon PostgreSQL Pool
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: { rejectUnauthorized: false },
@@ -65,7 +73,6 @@ pool.query('SELECT NOW()')
   .then(() => console.log('✅ Neon PostgreSQL connected'))
   .catch(err => console.error('❌ DB Error:', err));
 
-// 🔥 ALL YOUR ROUTES HERE (unchanged)
 app.get('/api/books/:userId', async (req, res) => { /* existing code */ });
 app.post('/api/register', async (req, res) => { /* existing code */ });
 // ... rest of routes ...
