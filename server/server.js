@@ -18,6 +18,7 @@ const allowedOrigins = [
   'http://localhost:3000',
   'http://localhost:3001',
   'https://main.d1hr2gomzak89g.amplifyapp.com',
+  'https://worthy-reads-xxxx.vercel.app', 
   'https://worthy-reads.onrender.com'
 ];
 
