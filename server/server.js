@@ -17,10 +17,19 @@ const secretKey = process.env.SESSION_SECRET || process.env.JWT_SECRET || crypto
 const allowedOrigins = [
   'http://localhost:3000',
   'http://localhost:3001',
+  'http://localhost:5173',
   'https://main.d1hr2gomzak89g.amplifyapp.com',
-  'https://worthy-reads-xxxx.vercel.app', 
+  'https://worthy-reads.vercel.app',      // ← YOUR VERCEL URL
   'https://worthy-reads.onrender.com'
 ];
+
+// Handle ALL preflight requests FIRST
+app.options('*', cors({
+  origin: allowedOrigins,
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 
 app.use(cors({
   origin: (origin, callback) => {
@@ -31,7 +40,10 @@ app.use(cors({
     }
   },
   credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
+
 
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
