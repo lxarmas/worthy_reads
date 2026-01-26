@@ -12,7 +12,7 @@ const CategoryPage = () => {
   const { categoryName } = useParams();
   const [books, setBooks] = useState( [] );
   const [selectedBookId, setSelectedBookId] = useState( null );
-  const [bookCount, setBookCount] = useState( 0 );
+ 
   const navigate = useNavigate();
 
   useEffect( () => {

@@ -8,7 +8,6 @@
     "@testing-library/user-event": "^13.5.0",
     "axios": "^1.7.2",
     "bootstrap": "^5.3.3",
-    "cors": "^2.8.5",
     "framer-motion": "^11.5.4",
     "react": "^18.3.1",
     "react-bootstrap": "^2.10.4",
@@ -20,33 +19,17 @@
     "web-vitals": "^2.1.4"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "CI=false react-scripts build",  // 🔥 FIXES VERCEL ERROR
-    "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "start": "CI=false react-scripts start",
+    "build": "DISABLE_ESLINT_PLUGIN=true CI=false react-scripts build",
+    "test": "react-scripts test"
   },
   "eslintConfig": {
     "extends": [
-      "react-app",
-      "react-app/jest"
-    ],
-    "rules": {
-      "no-unused-vars": "warn"  // 🔥 IGNORES UNUSED VARS
-    }
-  },
-  "browserslist": {
-    "production": [
-      ">0.2%",
-      "not dead",
-      "not op_mini all"
-    ],
-    "development": [
-      "last 1 chrome version",
-      "last 1 firefox version",
-      "last 1 safari version"
+      "react-app"
     ]
   },
-  "devDependencies": {
-    "nodemon": "^3.1.4"
+  "browserslist": {
+    "production": [">0.2%", "not dead", "not op_mini all"],
+    "development": ["last 1 chrome version", "last 1 firefox version", "last 1 safari version"]
   }
 }

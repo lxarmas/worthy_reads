@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import Nav from './Nav';
+
 import { Row, Col, } from 'react-bootstrap';
 import './About.css'
 
