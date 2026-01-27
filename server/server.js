@@ -81,7 +81,41 @@ pool.query('SELECT NOW()')
 
 app.get('/api/books/:userId', async (req, res) => { /* existing code */ });
 app.post('/api/register', async (req, res) => { /* existing code */ });
-// ... rest of routes ...
+app.post('/api/login', async (req, res) => {
+  const { email, password } = req.body;
+
+  try {
+    // 1. Find user by email
+    const result = await pool.query(
+      'SELECT id, email, password_hash FROM users WHERE email = $1',
+      [email]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(400).json({ error: 'Invalid email or password' });
+    }
+
+    const user = result.rows[0];
+
+    // 2. Compare password with bcrypt
+    const isMatch = await bcrypt.compare(password, user.password_hash);
+    if (!isMatch) {
+      return res.status(400).json({ error: 'Invalid email or password' });
+    }
+
+    // 3. Store user in session (or generate token)
+    req.session.userId = user.id;
+
+    res.json({
+      message: 'Login successful',
+      user: { id: user.id, email: user.email }
+    });
+  } catch (error) {
+    console.error('Login error:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
 
 function handleError(res, error) {
   console.error('Server Error:', error);
