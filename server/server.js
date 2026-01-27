@@ -11,76 +11,158 @@ const path = require('path');
 const app = express();
 const port = process.env.PORT || 3000;
 
-// 🔒 Secure secrets - use JWT_SECRET from Render
-const secretKey = process.env.SESSION_SECRET || process.env.JWT_SECRET || crypto.randomBytes(32).toString('hex');
+// 🔒 Session secret (Render env if available)
+const secretKey =
+  process.env.SESSION_SECRET ||
+  process.env.JWT_SECRET ||
+  crypto.randomBytes(32).toString('hex');
 
+// 🌐 Allowed frontends
 const allowedOrigins = [
   'http://localhost:3000',
   'http://localhost:3001',
   'http://localhost:5173',
   'https://main.d1hr2gomzak89g.amplifyapp.com',
-  'https://worthy-reads.vercel.app',      // ← YOUR VERCEL URL
-  'https://worthy-reads.onrender.com'
+  'https://worthy-reads.vercel.app',
+  'https://worthy-reads.onrender.com',
 ];
 
-// Handle ALL preflight requests FIRST
-app.options('*', cors({
-  origin: allowedOrigins,
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
+// Handle ALL preflight requests first
+app.options(
+  '*',
+  cors({
+    origin: allowedOrigins,
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+  })
+);
 
-app.use(cors({
-  origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('CORS blocked'));
-    }
-  },
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
+// CORS middleware
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error('CORS blocked'));
+      }
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+  })
+);
 
-
+// Body parsing + static
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use(session({
-  secret: secretKey,
-  resave: false,
-  saveUninitialized: false,
-  cookie: {
-    secure: process.env.NODE_ENV === 'production',
-    httpOnly: true,
-    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-    maxAge: 1000 * 60 * 60 * 24 * 7
-  }
-}));
+// Sessions
+app.use(
+  session({
+    secret: secretKey,
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      secure: process.env.NODE_ENV === 'production',
+      httpOnly: true,
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+      maxAge: 1000 * 60 * 60 * 24 * 7,
+    },
+  })
+);
 
-// 🔥 FIXED PG CONNECTION - explicit params bypass connectionString parsing bug
-const pool = new Pool({
-  host: 'ep-holy-fog-afyq354l-pooler.c-2.us-west-2.aws.neon.tech',
-  port: 5432,
-  user: 'neondb_owner',
-  password: 'npg_eQyJvGLPMj15',
-  database: 'neondb',
-  ssl: { rejectUnauthorized: false },
-  max: 20,
-  idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 2000,
+// 🔥 PostgreSQL connection (Neon via env or explicit config)
+// Recommended: use DATABASE_URL env var on Render
+const pool =
+  process.env.DATABASE_URL
+    ? new Pool({
+        connectionString: process.env.DATABASE_URL,
+        ssl: { rejectUnauthorized: false },
+        max: 20,
+        idleTimeoutMillis: 30000,
+        connectionTimeoutMillis: 2000,
+      })
+    : new Pool({
+        host: 'ep-holy-fog-afyq354l-pooler.c-2.us-west-2.aws.neon.tech',
+        port: 5432,
+        user: 'neondb_owner',
+        password: 'npg_eQyJvGLPMj15',
+        database: 'neondb',
+        ssl: { rejectUnauthorized: false },
+        max: 20,
+        idleTimeoutMillis: 30000,
+        connectionTimeoutMillis: 2000,
+      });
+
+// ✅ Test DB connection
+pool
+  .query('SELECT NOW()')
+  .then(() => console.log('✅ Neon PostgreSQL connected'))
+  .catch((err) => console.error('❌ DB Error:', err));
+
+// Utility error handler
+function handleError(res, error) {
+  console.error('Server Error:', error);
+  res.status(500).json({ error: 'Internal Server Error' });
+}
+
+// =======================
+// AUTH ROUTES
+// =======================
+
+// POST /api/register – create user with bcrypt hash
+app.post('/api/register', async (req, res) => {
+  const { email, password, first_name, last_name } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).json({ error: 'Email and password required' });
+  }
+
+  try {
+    // Check if user exists
+    const existing = await pool.query(
+      'SELECT id FROM users WHERE email = $1',
+      [email]
+    );
+
+    if (existing.rows.length > 0) {
+      return res.status(400).json({ error: 'Email already registered' });
+    }
+
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+    // Insert user
+    const result = await pool.query(
+      `INSERT INTO users (email, password_hash, first_name, last_name)
+       VALUES ($1, $2, $3, $4)
+       RETURNING id, email, first_name, last_name`,
+      [email, hashedPassword, first_name || null, last_name || null]
+    );
+
+    const user = result.rows[0];
+
+    // Optionally set session
+    req.session.userId = user.id;
+
+    res.status(201).json({
+      message: 'User registered successfully',
+      user: {
+        id: user.id,
+        email: user.email,
+        first_name: user.first_name,
+        last_name: user.last_name,
+      },
+    });
+  } catch (error) {
+    handleError(res, error);
+  }
 });
 
-// ✅ Test connection on startup
-pool.query('SELECT NOW()')
-  .then(() => console.log('✅ Neon PostgreSQL connected'))
-  .catch(err => console.error('❌ DB Error:', err));
-
-app.get('/api/books/:userId', async (req, res) => { /* existing code */ });
-app.post('/api/register', async (req, res) => { /* existing code */ });
+// POST /api/login – verify bcrypt + set session
 app.post('/api/login', async (req, res) => {
   const { email, password } = req.body;
   console.log('🔍 Login attempt:', { email, password_length: password?.length });
@@ -109,21 +191,169 @@ app.post('/api/login', async (req, res) => {
 
     req.session.userId = user.id;
     console.log('🎉 Login success for user:', user.id);
-    res.json({ message: 'Login successful', user: { id: user.id, email: user.email } });
+
+    res.json({
+      message: 'Login successful',
+      user: { id: user.id, email: user.email },
+    });
   } catch (error) {
     console.error('💥 Login error:', error);
     res.status(500).json({ error: 'Server error' });
   }
 });
 
+// =======================
+// BOOK ROUTES
+// =======================
 
-function handleError(res, error) {
-  console.error('Server Error:', error);
-  res.status(500).json({ error: 'Internal Server Error' });
-}
+// GET /api/books/:userId – list books for user
+app.get('/api/books/:userId', async (req, res) => {
+  const { userId } = req.params;
+
+  try {
+    const result = await pool.query(
+      `SELECT
+         book_id,
+         user_id,
+         title,
+         author,
+         image_link,
+         rating,
+         categories,
+         description_book,
+         preview_link
+       FROM books
+       WHERE user_id = $1
+       ORDER BY book_id DESC`,
+      [userId]
+    );
+
+    res.json(result.rows);
+  } catch (error) {
+    handleError(res, error);
+  }
+});
+
+// POST /api/books – add book for user (with Google Books fetch)
+app.post('/api/books', async (req, res) => {
+  const { title, author, user_id } = req.body;
+
+  if (!title || !author || !user_id) {
+    return res
+      .status(400)
+      .json({ error: 'Title, author, and user_id are required' });
+  }
+
+  try {
+    // Optional: fetch book data from Google Books
+    let image_link = null;
+    let categories = null;
+    let description_book = null;
+    let preview_link = null;
+
+    try {
+      const googleRes = await axios.get(
+        'https://www.googleapis.com/books/v1/volumes',
+        {
+          params: {
+            q: `${title} ${author}`,
+            maxResults: 1,
+          },
+        }
+      );
+
+      const item = googleRes.data.items?.[0];
+      if (item) {
+        const info = item.volumeInfo || {};
+        image_link =
+          info.imageLinks?.thumbnail ||
+          info.imageLinks?.smallThumbnail ||
+          null;
+        categories = info.categories || null;
+        description_book = info.description || null;
+        preview_link = info.previewLink || null;
+      }
+    } catch (gbError) {
+      console.warn('Google Books fetch failed, continuing without extra data');
+    }
+
+    const result = await pool.query(
+      `INSERT INTO books
+         (user_id, title, author, image_link, rating, categories, description_book, preview_link)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+       RETURNING book_id`,
+      [user_id, title, author, image_link, 0, categories, description_book, preview_link]
+    );
+
+    res.status(201).json({
+      success: true,
+      book_id: result.rows[0].book_id,
+    });
+  } catch (error) {
+    handleError(res, error);
+  }
+});
+
+// DELETE /api/books/:bookId – delete book and return new count
+app.delete('/api/books/:bookId', async (req, res) => {
+  const { bookId } = req.params;
+
+  try {
+    // Get book to know user_id
+    const bookRes = await pool.query(
+      'SELECT user_id FROM books WHERE book_id = $1',
+      [bookId]
+    );
+
+    if (bookRes.rows.length === 0) {
+      return res.status(404).json({ error: 'Book not found' });
+    }
+
+    const userId = bookRes.rows[0].user_id;
+
+    // Delete book
+    await pool.query('DELETE FROM books WHERE book_id = $1', [bookId]);
+
+    // New count for that user
+    const countRes = await pool.query(
+      'SELECT COUNT(*)::int AS count FROM books WHERE user_id = $1',
+      [userId]
+    );
+
+    res.json({
+      success: true,
+      bookCount: countRes.rows[0].count,
+    });
+  } catch (error) {
+    handleError(res, error);
+  }
+});
+
+// PUT /api/books/:bookId/rating – update rating
+app.put('/api/books/:bookId/rating', async (req, res) => {
+  const { bookId } = req.params;
+  const { rating } = req.body;
+
+  try {
+    await pool.query('UPDATE books SET rating = $1 WHERE book_id = $2', [
+      rating,
+      bookId,
+    ]);
+
+    res.json({ success: true });
+  } catch (error) {
+    handleError(res, error);
+  }
+});
+
+// =======================
+// START SERVER
+// =======================
 
 const server = app.listen(port, () => {
-  console.log(`📡 Server live on port ${port} (${process.env.NODE_ENV || 'development'})`);
+  console.log(
+    `📡 Server live on port ${port} (${process.env.NODE_ENV || 'development'})`
+  );
 });
 
 process.on('SIGTERM', () => {
@@ -132,6 +362,3 @@ process.on('SIGTERM', () => {
     pool.end();
   });
 });
-
-
-
