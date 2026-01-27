@@ -83,36 +83,36 @@ app.get('/api/books/:userId', async (req, res) => { /* existing code */ });
 app.post('/api/register', async (req, res) => { /* existing code */ });
 app.post('/api/login', async (req, res) => {
   const { email, password } = req.body;
+  console.log('🔍 Login attempt:', { email, password_length: password?.length });
 
   try {
-    // 1. Find user by email
     const result = await pool.query(
       'SELECT id, email, password_hash FROM users WHERE email = $1',
       [email]
     );
+    console.log('👤 Found users:', result.rows.length);
 
     if (result.rows.length === 0) {
+      console.log('❌ No user found for email:', email);
       return res.status(400).json({ error: 'Invalid email or password' });
     }
 
     const user = result.rows[0];
+    console.log('🔑 Hash preview:', user.password_hash.substring(0, 20));
 
-    // 2. Compare password with bcrypt
     const isMatch = await bcrypt.compare(password, user.password_hash);
+    console.log('✅ bcrypt match:', isMatch);
+
     if (!isMatch) {
       return res.status(400).json({ error: 'Invalid email or password' });
     }
 
-    // 3. Store user in session (or generate token)
     req.session.userId = user.id;
-
-    res.json({
-      message: 'Login successful',
-      user: { id: user.id, email: user.email }
-    });
+    console.log('🎉 Login success for user:', user.id);
+    res.json({ message: 'Login successful', user: { id: user.id, email: user.email } });
   } catch (error) {
-    console.error('Login error:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
+    console.error('💥 Login error:', error);
+    res.status(500).json({ error: 'Server error' });
   }
 });
 
@@ -132,3 +132,6 @@ process.on('SIGTERM', () => {
     pool.end();
   });
 });
+
+
+
