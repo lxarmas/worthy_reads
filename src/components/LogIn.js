@@ -10,18 +10,31 @@ function LogIn() {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+    setError('');
+
     try {
-      const response = await loginUser({ username: email, password });
+      // ✅ send email + password (not username)
+      const response = await loginUser({ email, password });
       console.log('Login successful:', response);
 
-      localStorage.setItem('userId', response.data.user_id);
+      // ✅ response.data.user.id from your backend
+      const userId = response.data?.user?.id;
+      if (userId) {
+        localStorage.setItem('userId', userId);
+      }
+
       navigate('/books');
-    } catch (error) {
-      console.error('Login error:', error.response ? error.response.data : error.message);
+    } catch (err) {
+      console.error(
+        'Login error:',
+        err.response ? err.response.data : err.message
+      );
+
       const errorMessage =
-        error.response?.data?.error ||
-        error.message ||
+        err.response?.data?.error ||
+        err.message ||
         'Login failed. Please try again.';
+
       setError(errorMessage);
     }
   };
@@ -53,11 +66,15 @@ function LogIn() {
 
       <div className="row justify-content-center">
         <div className="col-md-3">
-          <div className="card shadow-lg" style={{ borderRadius: '34px', border: 'none' }}>
+          <div
+            className="card shadow-lg"
+            style={{ borderRadius: '34px', border: 'none' }}
+          >
             <div
               className="card-body p-5"
               style={{
-                background: 'linear-gradient(135deg, rgb(170, 202, 197), rgb(110, 203, 192))',
+                background:
+                  'linear-gradient(135deg, rgb(170, 202, 197), rgb(110, 203, 192))',
                 color: '#2c7a6e',
                 borderRadius: '34px',
                 boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
@@ -110,7 +127,10 @@ function LogIn() {
               </form>
 
               {error && (
-                <p className="text-danger mt-3" style={{ fontWeight: 'bold' }}>
+                <p
+                  className="text-danger mt-3"
+                  style={{ fontWeight: 'bold' }}
+                >
                   {error}
                 </p>
               )}
@@ -131,12 +151,16 @@ function LogIn() {
 
                 <p>
                   Don’t have an account?{' '}
-                  <a
-                    href="/register"
-                    style={{ color: '#ffffff', textDecoration: 'underline' }}
+                  <Link
+                    to="/register"
+                    style={{
+                      color: '#ffffff',
+                      textDecoration: 'underline',
+                      fontWeight: 'bold',
+                    }}
                   >
                     Register here
-                  </a>
+                  </Link>
                 </p>
               </div>
             </div>
