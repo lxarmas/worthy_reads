@@ -1,18 +1,33 @@
+
+// api.js
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || 
-    (process.env.NODE_ENV === 'development' ? 'http://localhost:5000' : ''), // Local backend port
+  baseURL:
+    process.env.REACT_APP_API_URL ||
+    (process.env.NODE_ENV === 'development'
+      ? 'http://localhost:3000'
+      : ''),
   withCredentials: true,
 });
+
+export const loginUser = async ({ email, password }) => {
+  try {
+    const res = await api.post('/api/login', { email, password });
+    return res; // LogIn.js uses res.data.user.id
+  } catch (error) {
+    const apiError =
+      error.response?.data?.error ||
+      error.message ||
+      'Login failed. Please try again.';
+    throw new Error(apiError);
+  }
+};
 
 export const registerUser = async (userData) => {
   return await api.post('/api/register', userData);
 };
 
-export const loginUser = async (userData) => {
-  return await api.post('/api/login', userData);
-};
 
 export const fetchBooks = async (userId) => {
   return await api.get(`/api/books/${userId}`);
