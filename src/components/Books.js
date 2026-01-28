@@ -1,12 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Form, Alert, Card, Container, Row, Col, Spinner } from 'react-bootstrap';
+import {
+  Button,
+  Form,
+  Alert,
+  Card,
+  Container,
+  Row,
+  Col,
+  Spinner,
+} from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 
 import {
   fetchBooks,
   addBook,
   deleteBook,
-  // fetchBooksByCategory, // use later if needed
+  // updateBookRating, // implement later if you want server-side rating
 } from '../api';
 
 import Rating from './Rating';
@@ -19,11 +28,25 @@ function Books() {
   const [title, setTitle] = useState('');
   const [author, setAuthor] = useState('');
   const [userId] = useState(localStorage.getItem('userId'));
-  const [user, setUser] = useState(null); // requires /api/users/:id route
+  const [user, setUser] = useState(null); // for future /api/users/:id
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
   const [bookCount, setBookCount] = useState(0);
   const [selectedBookId, setSelectedBookId] = useState(null);
+
+  // helper: normalize backend rows to include book_id
+  const normalizeBooks = (rows = []) =>
+    rows.map((b) => ({
+      ...b,
+      // backend returns id; make sure frontend can still use book_id
+      book_id: b.book_id ?? b.id,
+      // ensure categories is always an array for mapping
+      categories: Array.isArray(b.categories)
+        ? b.categories
+        : b.categories
+        ? String(b.categories).split(',').map((c) => c.trim())
+        : [],
+    }));
 
   useEffect(() => {
     if (!userId) {
@@ -38,8 +61,9 @@ function Books() {
         setError(null);
 
         const response = await fetchBooks(userId);
-        setBooks(response.data);
-        setBookCount(response.data.length || 0);
+        const normalized = normalizeBooks(response.data || []);
+        setBooks(normalized);
+        setBookCount(normalized.length);
       } catch (err) {
         console.error('Error fetching books:', err);
         setError('Failed to fetch books. Please try again.');
@@ -48,10 +72,9 @@ function Books() {
       }
     };
 
-    // Optional: only if you implement /api/users/:userId
     const loadUser = async () => {
       try {
-        // TODO: implement a getUser(userId) in api.js and use it here
+        // TODO: implement getUser(userId) in api.js if you want user details
         // const response = await getUser(userId);
         // setUser(response.data);
       } catch (err) {
@@ -65,6 +88,7 @@ function Books() {
 
   const handleAddBook = async (event) => {
     event.preventDefault();
+
     if (!userId) {
       setError('No user found. Please log in again.');
       return;
@@ -74,10 +98,10 @@ function Books() {
       setError(null);
       await addBook({ title, author, user_id: userId });
 
-      // Refresh book list
       const response = await fetchBooks(userId);
-      setBooks(response.data);
-      setBookCount(response.data.length || 0);
+      const normalized = normalizeBooks(response.data || []);
+      setBooks(normalized);
+      setBookCount(normalized.length);
 
       setTitle('');
       setAuthor('');
@@ -93,7 +117,10 @@ function Books() {
       const response = await deleteBook(bookId);
 
       if (response.data?.success) {
-        setBooks((prevBooks) => prevBooks.filter((book) => book.book_id !== bookId));
+        setBooks((prevBooks) =>
+          prevBooks.filter((book) => book.book_id !== bookId)
+        );
+
         if (typeof response.data.bookCount === 'number') {
           setBookCount(response.data.bookCount);
         } else {
@@ -109,10 +136,11 @@ function Books() {
   const handleRatingChange = async (bookId, rate) => {
     try {
       setError(null);
-      // If you add updateBookRating in api.js, call it here
+
+      // If you later implement updateBookRating in api.js, call it here:
       // await updateBookRating(bookId, rate);
 
-      // For now, optimistic UI update only
+      // Optimistic UI update
       setBooks((prevBooks) =>
         prevBooks.map((book) =>
           book.book_id === bookId ? { ...book, rating: rate } : book
@@ -127,14 +155,13 @@ function Books() {
     setSelectedBookId((prev) => (prev === bookId ? null : bookId));
   };
 
+  const displayName = user?.first_name
+    ? `${user.first_name.charAt(0).toUpperCase()}${user.first_name.slice(1)}`
+    : 'User';
+
   return (
     <Container className="px-3">
-      <h2 className="username-color">
-        Welcome{' '}
-        {user
-          ? `${user.first_name.charAt(0).toUpperCase()}${user.first_name.slice(1)}`
-          : 'User'}
-      </h2>
+      <h2 className="username-color">Welcome {displayName}</h2>
 
       {/* Add Book Form */}
       <Form className="book-card" onSubmit={handleAddBook}>
@@ -177,89 +204,100 @@ function Books() {
           )}
 
           <Row className="mt-3 book-list justify-content-center">
-            {books.map((book) => (
-              <Col sm={12} md={6} lg={4} key={book.book_id} className="mb-3">
-                <Card className="book-container">
-                  <Card.Body className="card-body">
-                    <div className="book-info">
-                      <div className="book-details">
-                        <div className="d-flex justify-content-between align-items-center">
-                          <div className="title-author">
-                            <Card.Title>{book.title}</Card.Title>
-                            <Card.Subtitle className="author-name">
-                              By {book.author}
-                            </Card.Subtitle>
+            {books.map((book) => {
+              const id = book.book_id ?? book.id;
+              const imageBase = book.image_link || '';
+              const hasImage = Boolean(imageBase);
+
+              return (
+                <Col sm={12} md={6} lg={4} key={id} className="mb-3">
+                  <Card className="book-container">
+                    <Card.Body className="card-body">
+                      <div className="book-info">
+                        <div className="book-details">
+                          <div className="d-flex justify-content-between align-items-center">
+                            <div className="title-author">
+                              <Card.Title>{book.title}</Card.Title>
+                              <Card.Subtitle className="author-name">
+                                By {book.author}
+                              </Card.Subtitle>
+                            </div>
+                            <Button
+                              className="question-button"
+                              onClick={() => toggleDescription(id)}
+                              style={{ all: 'unset' }}
+                            >
+                              ?
+                            </Button>
                           </div>
-                          <Button
-                            className="question-button"
-                            onClick={() => toggleDescription(book.book_id)}
-                            style={{ all: 'unset' }}
-                          >
-                            ?
-                          </Button>
+
+                          {hasImage && (
+                            <img
+                              srcSet={`
+                                ${imageBase}-small.jpg 500w,
+                                ${imageBase}-medium.jpg 1000w,
+                                ${imageBase}-large.jpg 1500w,
+                                ${imageBase}-xlarge.jpg 3000w
+                              `}
+                              sizes="(max-width: 600px) 500px, (max-width: 1200px) 1000px, 1500px"
+                              src={`${imageBase}-x-large.jpg`}
+                              alt={book.title}
+                              className="img-fluid clickable-image"
+                              onClick={() =>
+                                book.preview_link &&
+                                window.open(book.preview_link, '_blank')
+                              }
+                            />
+                          )}
+
+                          <div className="rating-title-author mt-2">
+                            <Rating
+                              initialRating={book.rating || 0}
+                              onChange={(rate) => handleRatingChange(id, rate)}
+                            />
+                          </div>
+
+                          {book.categories?.length > 0 && (
+                            <div className="book-categories">
+                              <strong>Categories: </strong>
+                              {book.categories.map((category, index) => (
+                                <React.Fragment key={`${id}-${category}`}>
+                                  <Link to={`/category/${category}`}>
+                                    {category}
+                                  </Link>
+                                  {index < book.categories.length - 1 && ', '}
+                                </React.Fragment>
+                              ))}
+                            </div>
+                          )}
+
+                          <div className="button-group mt-2">
+                            <Button
+                              className="custom-button custom-button-primary"
+                              onClick={() => handleDeleteBook(id)}
+                            >
+                              Delete
+                            </Button>
+                          </div>
                         </div>
+                      </div>
 
-                        <img
-                          srcSet={`
-                            ${book.image_link}-small.jpg 500w,
-                            ${book.image_link}-medium.jpg 1000w,
-                            ${book.image_link}-large.jpg 1500w,
-                            ${book.image_link}-xlarge.jpg 3000w
-                          `}
-                          sizes="(max-width: 600px) 500px, (max-width: 1200px) 1000px, 1500px"
-                          src={`${book.image_link}-x-large.jpg`}
-                          alt={book.title}
-                          className="img-fluid clickable-image"
-                          onClick={() =>
-                            book.previewLink && window.open(book.previewLink, '_blank')
-                          }
-                        />
-
-                        <div className="rating-title-author mt-2">
-                          <Rating
-                            initialRating={book.rating || 0}
-                            onChange={(rate) => handleRatingChange(book.book_id, rate)}
+                      {selectedBookId === id && (
+                        <div
+                          className="book-description-wrapper"
+                          key={`description-${id}`}
+                        >
+                          <BookDescription
+                            description={book.description_book}
+                            onClick={() => toggleDescription(id)}
                           />
                         </div>
-
-                        {book.categories?.length > 0 && (
-                          <div className="book-categories">
-                            <strong>Categories: </strong>
-                            {book.categories.map((category, index) => (
-                              <React.Fragment key={category}>
-                                <Link to={`/category/${category}`}>{category}</Link>
-                                {index < book.categories.length - 1 && ', '}
-                              </React.Fragment>
-                            ))}
-                          </div>
-                        )}
-
-                        <div className="button-group mt-2">
-                          <Button
-                            className="custom-button custom-button-primary"
-                            onClick={() => handleDeleteBook(book.book_id)}
-                          >
-                            Delete
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-
-                    {selectedBookId === book.book_id && (
-                      <div
-                        className="book-description-wrapper"
-                        key={`description-${book.book_id}`}
-                      >
-                        <BookDescription
-                          description={book.description_book}
-                          onClick={() => toggleDescription(book.book_id)}
-                        />
-                      </div>
-                    )}
-                  </Card.Body>
-                </Card>
-              </Col>
-            ))}
+                      )}
+                    </Card.Body>
+                  </Card>
+                </Col>
+              );
+            })}
           </Row>
         </>
       )}

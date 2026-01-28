@@ -75,7 +75,6 @@ app.use(
 );
 
 // 🔥 PostgreSQL connection (Neon via env or explicit config)
-// Recommended: use DATABASE_URL env var on Render
 const pool =
   process.env.DATABASE_URL
     ? new Pool({
@@ -213,7 +212,7 @@ app.get('/api/books/:userId', async (req, res) => {
   try {
     const result = await pool.query(
       `SELECT
-         book_id,
+         id,
          user_id,
          title,
          author,
@@ -224,7 +223,7 @@ app.get('/api/books/:userId', async (req, res) => {
          preview_link
        FROM books
        WHERE user_id = $1
-       ORDER BY book_id DESC`,
+       ORDER BY id DESC`,
       [userId]
     );
 
@@ -281,13 +280,13 @@ app.post('/api/books', async (req, res) => {
       `INSERT INTO books
          (user_id, title, author, image_link, rating, categories, description_book, preview_link)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-       RETURNING book_id`,
+       RETURNING id`,
       [user_id, title, author, image_link, 0, categories, description_book, preview_link]
     );
 
     res.status(201).json({
       success: true,
-      book_id: result.rows[0].book_id,
+      id: result.rows[0].id, 
     });
   } catch (error) {
     handleError(res, error);
@@ -301,7 +300,7 @@ app.delete('/api/books/:bookId', async (req, res) => {
   try {
     // Get book to know user_id
     const bookRes = await pool.query(
-      'SELECT user_id FROM books WHERE book_id = $1',
+      'SELECT user_id FROM books WHERE id = $1',
       [bookId]
     );
 
@@ -312,7 +311,7 @@ app.delete('/api/books/:bookId', async (req, res) => {
     const userId = bookRes.rows[0].user_id;
 
     // Delete book
-    await pool.query('DELETE FROM books WHERE book_id = $1', [bookId]);
+    await pool.query('DELETE FROM books WHERE id = $1', [bookId]);
 
     // New count for that user
     const countRes = await pool.query(
@@ -335,7 +334,7 @@ app.put('/api/books/:bookId/rating', async (req, res) => {
   const { rating } = req.body;
 
   try {
-    await pool.query('UPDATE books SET rating = $1 WHERE book_id = $2', [
+    await pool.query('UPDATE books SET rating = $1 WHERE id = $2', [
       rating,
       bookId,
     ]);
