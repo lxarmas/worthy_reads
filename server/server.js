@@ -3,7 +3,6 @@ const saltRounds = 10;
 const express = require('express');
 const session = require('express-session');
 const crypto = require('crypto');
-const axios = require('axios');
 const { Pool } = require('pg');
 const cors = require('cors');
 const path = require('path');
@@ -144,7 +143,7 @@ app.post('/api/register', async (req, res) => {
 
     const user = result.rows[0];
 
-    // Optionally set session
+    // Set session
     req.session.userId = user.id;
 
     res.status(201).json({
@@ -216,11 +215,9 @@ app.get('/api/books/:userId', async (req, res) => {
          user_id,
          title,
          author,
-         image_link,
+         category,
          rating,
-         categories,
-         description_book,
-         preview_link
+         created_at
        FROM books
        WHERE user_id = $1
        ORDER BY id DESC`,
@@ -233,7 +230,7 @@ app.get('/api/books/:userId', async (req, res) => {
   }
 });
 
-// POST /api/books – add book for user (with Google Books fetch)
+// POST /api/books – add book for user (simple version matching schema)
 app.post('/api/books', async (req, res) => {
   const { title, author, user_id } = req.body;
 
@@ -244,49 +241,17 @@ app.post('/api/books', async (req, res) => {
   }
 
   try {
-    // Optional: fetch book data from Google Books
-    let image_link = null;
-    let categories = null;
-    let description_book = null;
-    let preview_link = null;
-
-    try {
-      const googleRes = await axios.get(
-        'https://www.googleapis.com/books/v1/volumes',
-        {
-          params: {
-            q: `${title} ${author}`,
-            maxResults: 1,
-          },
-        }
-      );
-
-      const item = googleRes.data.items?.[0];
-      if (item) {
-        const info = item.volumeInfo || {};
-        image_link =
-          info.imageLinks?.thumbnail ||
-          info.imageLinks?.smallThumbnail ||
-          null;
-        categories = info.categories || null;
-        description_book = info.description || null;
-        preview_link = info.previewLink || null;
-      }
-    } catch (gbError) {
-      console.warn('Google Books fetch failed, continuing without extra data');
-    }
-
     const result = await pool.query(
       `INSERT INTO books
-         (user_id, title, author, image_link, rating, categories, description_book, preview_link)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+         (user_id, title, author, category, rating)
+       VALUES ($1, $2, $3, $4, $5)
        RETURNING id`,
-      [user_id, title, author, image_link, 0, categories, description_book, preview_link]
+      [user_id, title, author, null, 0]
     );
 
     res.status(201).json({
       success: true,
-      id: result.rows[0].id, 
+      id: result.rows[0].id,
     });
   } catch (error) {
     handleError(res, error);
