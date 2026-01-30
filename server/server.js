@@ -163,12 +163,13 @@ app.post('/api/login', async (req, res) => {
 // =======================
 // BOOK ROUTES (optimized for restored schema: book_id PK + rich fields)
 // =======================
+// GET /api/books/:userId – list books for user
 app.get('/api/books/:userId', async (req, res) => {
   const { userId } = req.params;
 
   try {
     const result = await pool.query(
-      `SELECT book_id as id, title, author, image_link, description_book, categories, preview_link, rating, created_at
+      `SELECT book_id, title, author, image_link, description_book, categories, preview_link, rating, created_at
        FROM books WHERE user_id = $1 ORDER BY book_id DESC`,
       [userId]
     );
@@ -178,6 +179,7 @@ app.get('/api/books/:userId', async (req, res) => {
   }
 });
 
+// POST /api/books – add book for user
 app.post('/api/books', async (req, res) => {
   const { title, author, image_link, description_book, categories, preview_link, user_id, rating = 0 } = req.body;
 
@@ -189,16 +191,17 @@ app.post('/api/books', async (req, res) => {
     const result = await pool.query(
       `INSERT INTO books (user_id, title, author, image_link, description_book, categories, preview_link, rating)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-       RETURNING book_id as id`,
+       RETURNING book_id`,
       [user_id, title, author, image_link || null, description_book || null, categories || '{}', preview_link || null, rating]
     );
 
-    res.status(201).json({ success: true, id: result.rows[0].id });
+    res.status(201).json({ success: true, id: result.rows[0].book_id });
   } catch (error) {
     handleError(res, error);
   }
 });
 
+// DELETE /api/books/:bookId – delete book and return new count
 app.delete('/api/books/:bookId', async (req, res) => {
   const { bookId } = req.params;
 
@@ -222,6 +225,7 @@ app.delete('/api/books/:bookId', async (req, res) => {
   }
 });
 
+// PUT /api/books/:bookId/rating – update rating
 app.put('/api/books/:bookId/rating', async (req, res) => {
   const { bookId } = req.params;
   const { rating } = req.body;
@@ -241,6 +245,7 @@ app.put('/api/books/:bookId/rating', async (req, res) => {
     handleError(res, error);
   }
 });
+
 
 // =======================
 // START SERVER (graceful shutdown optimized)
