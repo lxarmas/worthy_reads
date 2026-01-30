@@ -164,38 +164,104 @@ app.post('/api/login', async (req, res) => {
 // BOOK ROUTES (optimized for restored schema: book_id PK + rich fields)
 // =======================
 // GET /api/books/:userId – list books for user
+// =======================
+// BOOK ROUTES
+// =======================
+
+// GET /api/books/:userId – list books for user (rich schema)
 app.get('/api/books/:userId', async (req, res) => {
   const { userId } = req.params;
 
   try {
     const result = await pool.query(
-      `SELECT book_id, title, author, image_link, description_book, categories, preview_link, rating, created_at
-       FROM books WHERE user_id = $1 ORDER BY book_id DESC`,
+      `SELECT
+         book_id,
+         title,
+         author,
+         image_link,
+         user_id,
+         description_book,
+         categories,
+         preview_link,
+         rating
+       FROM books
+       WHERE user_id = $1
+       ORDER BY book_id DESC`,
       [userId]
     );
+
     res.json(result.rows);
   } catch (error) {
     handleError(res, error);
   }
 });
 
-// POST /api/books – add book for user
+// POST /api/books – add book for user (with Google Books)
 app.post('/api/books', async (req, res) => {
-  const { title, author, image_link, description_book, categories, preview_link, user_id, rating = 0 } = req.body;
+  const { title, author, user_id } = req.body;
 
   if (!title || !author || !user_id) {
-    return res.status(400).json({ error: 'Title, author, and user_id required' });
+    return res
+      .status(400)
+      .json({ error: 'Title, author, and user_id are required' });
   }
 
   try {
+    // Optional: fetch book data from Google Books
+    let image_link = null;
+    let categories = null;
+    let description_book = null;
+    let preview_link = null;
+
+    try {
+      const axios = require('axios');
+
+      const googleRes = await axios.get(
+        'https://www.googleapis.com/books/v1/volumes',
+        {
+          params: {
+            q: `${title} ${author}`,
+            maxResults: 1,
+          },
+        }
+      );
+
+      const item = googleRes.data.items?.[0];
+      if (item) {
+        const info = item.volumeInfo || {};
+        image_link =
+          info.imageLinks?.thumbnail ||
+          info.imageLinks?.smallThumbnail ||
+          null;
+        categories = info.categories || null;
+        description_book = info.description || null;
+        preview_link = info.previewLink || null;
+      }
+    } catch (gbError) {
+      console.warn('Google Books fetch failed, continuing without extra data');
+    }
+
     const result = await pool.query(
-      `INSERT INTO books (user_id, title, author, image_link, description_book, categories, preview_link, rating)
+      `INSERT INTO books
+         (title, author, image_link, user_id, description_book, categories, preview_link, rating)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
        RETURNING book_id`,
-      [user_id, title, author, image_link || null, description_book || null, categories || '{}', preview_link || null, rating]
+      [
+        title,
+        author,
+        image_link,
+        user_id,
+        description_book,
+        categories,
+        preview_link,
+        0, // or 1 if you later re-add rating check
+      ]
     );
 
-    res.status(201).json({ success: true, id: result.rows[0].book_id });
+    res.status(201).json({
+      success: true,
+      book_id: result.rows[0].book_id,
+    });
   } catch (error) {
     handleError(res, error);
   }
@@ -206,20 +272,31 @@ app.delete('/api/books/:bookId', async (req, res) => {
   const { bookId } = req.params;
 
   try {
-    const bookRes = await pool.query('SELECT user_id FROM books WHERE book_id = $1', [bookId]);
+    // Get book to know user_id
+    const bookRes = await pool.query(
+      'SELECT user_id FROM books WHERE book_id = $1',
+      [bookId]
+    );
 
     if (bookRes.rows.length === 0) {
       return res.status(404).json({ error: 'Book not found' });
     }
 
+    const userId = bookRes.rows[0].user_id;
+
+    // Delete book
     await pool.query('DELETE FROM books WHERE book_id = $1', [bookId]);
 
+    // New count for that user
     const countRes = await pool.query(
       'SELECT COUNT(*)::int AS count FROM books WHERE user_id = $1',
-      [bookRes.rows[0].user_id]
+      [userId]
     );
 
-    res.json({ success: true, bookCount: countRes.rows[0].count });
+    res.json({
+      success: true,
+      bookCount: countRes.rows[0].count,
+    });
   } catch (error) {
     handleError(res, error);
   }
@@ -231,14 +308,10 @@ app.put('/api/books/:bookId/rating', async (req, res) => {
   const { rating } = req.body;
 
   try {
-    const result = await pool.query(
-      'UPDATE books SET rating = $1 WHERE book_id = $2 RETURNING book_id',
-      [rating, bookId]
-    );
-
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Book not found' });
-    }
+    await pool.query('UPDATE books SET rating = $1 WHERE book_id = $2', [
+      rating,
+      bookId,
+    ]);
 
     res.json({ success: true });
   } catch (error) {
