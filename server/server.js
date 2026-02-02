@@ -111,6 +111,10 @@ function handleError(res, error) {
 // AUTH ROUTES
 // =======================
 
+// =======================
+// AUTH ROUTES
+// =======================
+
 // REGISTER
 app.post('/api/register', async (req, res) => {
   console.log('🔍 /api/register body:', req.body);
@@ -121,23 +125,22 @@ app.post('/api/register', async (req, res) => {
   }
 
   try {
-    // users table has user_id (NOT id)
+    // users table has username + password (plain), NOT email/password_hash
     const existing = await pool.query(
-      'SELECT user_id FROM users WHERE email = $1',
-      [email]
+      'SELECT user_id FROM users WHERE username = $1',
+      [email] // we treat email as username
     );
 
     if (existing.rows.length > 0) {
       return res.status(400).json({ error: 'Email already registered' });
     }
 
-    const hashedPassword = await bcrypt.hash(password, saltRounds);
-
+    // For now we store password as-is to match your schema (no password_hash column)
     const result = await pool.query(
-      `INSERT INTO users (email, password_hash, first_name, last_name)
+      `INSERT INTO users (username, password, first_name, last_name)
        VALUES ($1, $2, $3, $4)
-       RETURNING user_id, email, first_name, last_name`,
-      [email, hashedPassword, first_name || null, last_name || null]
+       RETURNING user_id, username, first_name, last_name`,
+      [email, password, first_name || null, last_name || null]
     );
 
     const user = result.rows[0];
@@ -149,7 +152,7 @@ app.post('/api/register', async (req, res) => {
       user_id: user.user_id,
       user: {
         id: user.user_id,
-        email: user.email,
+        email: user.username,
         first_name: user.first_name,
         last_name: user.last_name,
       },
@@ -159,6 +162,48 @@ app.post('/api/register', async (req, res) => {
     return res.status(500).json({ error: 'Internal Server Error' });
   }
 });
+
+// LOGIN
+app.post('/api/login', async (req, res) => {
+  const { email, password } = req.body;
+  console.log('🔍 Login attempt:', { email, password_length: password?.length });
+
+  try {
+    // Look up by username (your "email" field on the form)
+    const result = await pool.query(
+      'SELECT user_id, username, password FROM users WHERE username = $1',
+      [email]
+    );
+    console.log('👤 Found users:', result.rows.length);
+
+    if (result.rows.length === 0) {
+      console.log('❌ No user found for email:', email);
+      return res.status(400).json({ error: 'Invalid email or password' });
+    }
+
+    const user = result.rows[0];
+
+    // Compare plain password (because DB stores plain "password")
+    const isMatch = password === user.password;
+    console.log('✅ password match:', isMatch);
+
+    if (!isMatch) {
+      return res.status(400).json({ error: 'Invalid email or password' });
+    }
+
+    req.session.userId = user.user_id;
+    console.log('🎉 Login success for user:', user.user_id);
+
+    res.json({
+      message: 'Login successful',
+      user: { id: user.user_id, email: user.username },
+    });
+  } catch (error) {
+    console.error('💥 Login error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 
 // LOGIN
 app.post('/api/login', async (req, res) => {
