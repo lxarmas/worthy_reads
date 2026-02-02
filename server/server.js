@@ -114,6 +114,7 @@ function handleError(res, error) {
 
 // POST /api/register – create user with bcrypt hash
 app.post('/api/register', async (req, res) => {
+  console.log('🔍 /api/register body:', req.body);
   const { email, password, first_name, last_name } = req.body;
 
   if (!email || !password) {

@@ -28,7 +28,7 @@ function Register() {
       const response = await registerUser( {
         first_name: formData.firstName,
         last_name: formData.lastName,
-        username: formData.email,
+        email: formData.email,
         password: formData.password,
       } );
 

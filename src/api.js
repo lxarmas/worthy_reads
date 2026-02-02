@@ -24,8 +24,18 @@ export const loginUser = async ({ email, password }) => {
   }
 };
 
-export const registerUser = async (userData) => {
-  return await api.post('/api/register', userData);
+export const registerUser = async (data) => {
+  const res = await axios.post(
+    'https://worthy-reads.onrender.com/api/register',
+    {
+      first_name: data.first_name,
+      last_name: data.last_name,
+      email: data.email,
+      password: data.password,
+    },
+    { withCredentials: true }
+  );
+  return res;
 };
 
 
