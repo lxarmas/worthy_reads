@@ -11,13 +11,13 @@ const path = require('path');
 const app = express();
 const port = process.env.PORT || 3000;
 
-// 🔒 Session secret (Render env if available)
+// ========= SESSION SECRET =========
 const secretKey =
   process.env.SESSION_SECRET ||
   process.env.JWT_SECRET ||
   crypto.randomBytes(32).toString('hex');
 
-// 🌐 Allowed frontends
+// ========= CORS =========
 const allowedOrigins = [
   'http://localhost:3000',
   'http://localhost:3001',
@@ -27,7 +27,7 @@ const allowedOrigins = [
   'https://worthy-reads.onrender.com',
 ];
 
-// Handle ALL preflight requests first
+// Preflight
 app.options(
   '*',
   cors({
@@ -38,7 +38,7 @@ app.options(
   })
 );
 
-// CORS middleware
+// Main CORS
 app.use(
   cors({
     origin: (origin, callback) => {
@@ -54,12 +54,12 @@ app.use(
   })
 );
 
-// Body parsing + static
+// ========= BODY & STATIC =========
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Sessions
+// ========= SESSIONS =========
 app.use(
   session({
     secret: secretKey,
@@ -74,7 +74,7 @@ app.use(
   })
 );
 
-// 🔥 PostgreSQL connection (Neon via env or explicit config)
+// ========= DB (NEON) =========
 const pool =
   process.env.DATABASE_URL
     ? new Pool({
@@ -96,13 +96,12 @@ const pool =
         connectionTimeoutMillis: 2000,
       });
 
-// ✅ Test DB connection
 pool
   .query('SELECT NOW()')
   .then(() => console.log('✅ Neon PostgreSQL connected'))
   .catch((err) => console.error('❌ DB Error:', err));
 
-// Utility error handler
+// ========= ERROR HELPER =========
 function handleError(res, error) {
   console.error('Server Error:', error);
   res.status(500).json({ error: 'Internal Server Error' });
@@ -112,7 +111,7 @@ function handleError(res, error) {
 // AUTH ROUTES
 // =======================
 
-// POST /api/register – create user with bcrypt hash
+// REGISTER
 app.post('/api/register', async (req, res) => {
   console.log('🔍 /api/register body:', req.body);
   const { email, password, first_name, last_name } = req.body;
@@ -122,9 +121,9 @@ app.post('/api/register', async (req, res) => {
   }
 
   try {
-    // Check if user exists
+    // users table has user_id (NOT id)
     const existing = await pool.query(
-      'SELECT id FROM users WHERE email = $1',
+      'SELECT user_id FROM users WHERE email = $1',
       [email]
     );
 
@@ -132,44 +131,43 @@ app.post('/api/register', async (req, res) => {
       return res.status(400).json({ error: 'Email already registered' });
     }
 
-    // Hash password
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-    // Insert user
     const result = await pool.query(
       `INSERT INTO users (email, password_hash, first_name, last_name)
        VALUES ($1, $2, $3, $4)
-       RETURNING id, email, first_name, last_name`,
+       RETURNING user_id, email, first_name, last_name`,
       [email, hashedPassword, first_name || null, last_name || null]
     );
 
     const user = result.rows[0];
 
-    // Set session
-    req.session.userId = user.id;
+    req.session.userId = user.user_id;
 
     res.status(201).json({
       message: 'User registered successfully',
+      user_id: user.user_id,
       user: {
-        id: user.id,
+        id: user.user_id,
         email: user.email,
         first_name: user.first_name,
         last_name: user.last_name,
       },
     });
   } catch (error) {
-    handleError(res, error);
+    console.error('💥 Register error:', error);
+    return res.status(500).json({ error: 'Internal Server Error' });
   }
 });
 
-// POST /api/login – verify bcrypt + set session
+// LOGIN
 app.post('/api/login', async (req, res) => {
   const { email, password } = req.body;
   console.log('🔍 Login attempt:', { email, password_length: password?.length });
 
   try {
     const result = await pool.query(
-      'SELECT id, email, password_hash FROM users WHERE email = $1',
+      'SELECT user_id, email, password_hash FROM users WHERE email = $1',
       [email]
     );
     console.log('👤 Found users:', result.rows.length);
@@ -189,12 +187,12 @@ app.post('/api/login', async (req, res) => {
       return res.status(400).json({ error: 'Invalid email or password' });
     }
 
-    req.session.userId = user.id;
-    console.log('🎉 Login success for user:', user.id);
+    req.session.userId = user.user_id;
+    console.log('🎉 Login success for user:', user.user_id);
 
     res.json({
       message: 'Login successful',
-      user: { id: user.id, email: user.email },
+      user: { id: user.user_id, email: user.email },
     });
   } catch (error) {
     console.error('💥 Login error:', error);
@@ -206,7 +204,7 @@ app.post('/api/login', async (req, res) => {
 // BOOK ROUTES (rich schema)
 // =======================
 
-// GET /api/books/:userId – list books for user
+// GET books by user
 app.get('/api/books/:userId', async (req, res) => {
   const { userId } = req.params;
 
@@ -234,7 +232,7 @@ app.get('/api/books/:userId', async (req, res) => {
   }
 });
 
-// POST /api/books – add book for user (with Google Books fetch)
+// ADD book
 app.post('/api/books', async (req, res) => {
   const { title, author, user_id } = req.body;
 
@@ -245,7 +243,6 @@ app.post('/api/books', async (req, res) => {
   }
 
   try {
-    // Optional: fetch book data from Google Books
     let image_link = null;
     let categories = null;
     let description_book = null;
@@ -290,7 +287,7 @@ app.post('/api/books', async (req, res) => {
         description_book,
         categories,
         preview_link,
-        0, // or 1 if you enforce rating >= 1
+        0, // start rating at 0 (or 1 if you have a CHECK)
       ]
     );
 
@@ -303,12 +300,11 @@ app.post('/api/books', async (req, res) => {
   }
 });
 
-// DELETE /api/books/:bookId – delete book and return new count
+// DELETE book
 app.delete('/api/books/:bookId', async (req, res) => {
   const { bookId } = req.params;
 
   try {
-    // Get book to know user_id
     const bookRes = await pool.query(
       'SELECT user_id FROM books WHERE book_id = $1',
       [bookId]
@@ -320,10 +316,8 @@ app.delete('/api/books/:bookId', async (req, res) => {
 
     const userId = bookRes.rows[0].user_id;
 
-    // Delete book
     await pool.query('DELETE FROM books WHERE book_id = $1', [bookId]);
 
-    // New count for that user
     const countRes = await pool.query(
       'SELECT COUNT(*)::int AS count FROM books WHERE user_id = $1',
       [userId]
@@ -338,7 +332,7 @@ app.delete('/api/books/:bookId', async (req, res) => {
   }
 });
 
-// PUT /api/books/:bookId/rating – update rating
+// UPDATE rating
 app.put('/api/books/:bookId/rating', async (req, res) => {
   const { bookId } = req.params;
   const { rating } = req.body;
@@ -358,7 +352,6 @@ app.put('/api/books/:bookId/rating', async (req, res) => {
 // =======================
 // START SERVER
 // =======================
-
 const server = app.listen(port, () => {
   console.log(
     `📡 Server live on port ${port} (${process.env.NODE_ENV || 'development'})`
