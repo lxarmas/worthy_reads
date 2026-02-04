@@ -107,11 +107,9 @@ function handleError(res, error) {
   res.status(500).json({ error: 'Internal Server Error' });
 }
 
-// =======================
-// AUTH ROUTES
-// =======================
 
-// =======================
+
+
 // AUTH ROUTES
 // =======================
 
@@ -205,45 +203,7 @@ app.post('/api/login', async (req, res) => {
 });
 
 
-// LOGIN
-app.post('/api/login', async (req, res) => {
-  const { email, password } = req.body;
-  console.log('🔍 Login attempt:', { email, password_length: password?.length });
 
-  try {
-    const result = await pool.query(
-      'SELECT user_id, email, password_hash FROM users WHERE email = $1',
-      [email]
-    );
-    console.log('👤 Found users:', result.rows.length);
-
-    if (result.rows.length === 0) {
-      console.log('❌ No user found for email:', email);
-      return res.status(400).json({ error: 'Invalid email or password' });
-    }
-
-    const user = result.rows[0];
-    console.log('🔑 Hash preview:', user.password_hash.substring(0, 20));
-
-    const isMatch = await bcrypt.compare(password, user.password_hash);
-    console.log('✅ bcrypt match:', isMatch);
-
-    if (!isMatch) {
-      return res.status(400).json({ error: 'Invalid email or password' });
-    }
-
-    req.session.userId = user.user_id;
-    console.log('🎉 Login success for user:', user.user_id);
-
-    res.json({
-      message: 'Login successful',
-      user: { id: user.user_id, email: user.email },
-    });
-  } catch (error) {
-    console.error('💥 Login error:', error);
-    res.status(500).json({ error: 'Server error' });
-  }
-});
 
 // =======================
 // BOOK ROUTES (rich schema)
@@ -300,6 +260,7 @@ app.post('/api/books', async (req, res) => {
           params: {
             q: `${title} ${author}`,
             maxResults: 1,
+            key: process.env.GOOGLE_BOOKS_API_KEY,
           },
         }
       );
