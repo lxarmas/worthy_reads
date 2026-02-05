@@ -6,35 +6,55 @@ import './HomePage.css';
 import axios from 'axios';
 
 function HomePage() {
+  // List of books for the homepage cards
   const [books, setBooks] = useState([]);
+  // Simple loading / error UI state
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Prevent duplicate calls in React StrictMode / remounts
+  // Tracks whether we already fetched once (prevents duplicate calls
+  // in React StrictMode and on potential remounts)
   const hasFetchedRef = useRef(false);
 
   useEffect(() => {
+    // If we already fetched in this session, don't fetch again
     if (hasFetchedRef.current) {
       setLoading(false);
       return;
     }
     hasFetchedRef.current = true;
 
+    // AbortController lets us cancel the request if the component unmounts
     const controller = new AbortController();
 
     const fetchHomeBooks = async () => {
       try {
+        // Call your Express endpoint, which in turn calls Google Books
         const res = await axios.get('/api/home-books', {
           signal: controller.signal,
         });
 
-        setBooks(res.data || []);
+        const data = res.data;
+
+        // ✅ Ensure we always store an array in `books`
+        // If the server returns an array (our normal case), use it directly.
+        // If it ever returns an object (e.g. { error: ... }), fall back to [].
+        if (Array.isArray(data)) {
+          setBooks(data);
+        } else if (Array.isArray(data?.items)) {
+          // Safety: if at some point you change the server to send { items: [...] }
+          setBooks(data.items);
+        } else {
+          setBooks([]);
+        }
+
         setError(null);
       } catch (err) {
         if (axios.isCancel(err)) return;
 
         console.error('Error fetching home books:', err);
 
+        // If backend bubbled up a 429 from Google, show a specific message
         if (err.response?.status === 429) {
           setError(
             'Too many requests at the moment. Please try again in a bit.'
@@ -42,6 +62,9 @@ function HomePage() {
         } else {
           setError('Failed to fetch books. Please try again.');
         }
+
+        // On error, make sure we don't try to map a non-array
+        setBooks([]);
       } finally {
         setLoading(false);
       }
@@ -49,11 +72,13 @@ function HomePage() {
 
     fetchHomeBooks();
 
+    // Cleanup: cancel the request if component unmounts
     return () => controller.abort();
   }, []);
 
   return (
     <main className="container mt-5">
+      {/* Hero / intro section */}
       <div className="jumbotron text-center p-5 bg-light shadow">
         <div className="container">
           <Row className="align-items-center justify-content-center my-2">
@@ -96,6 +121,7 @@ function HomePage() {
             </Col>
           </Row>
 
+          {/* Features section */}
           <div className="features-section my-5">
             <h2 className="section-title text-primary pb-5 fs-1">
               Join the Club
@@ -127,6 +153,7 @@ function HomePage() {
         </div>
       </div>
 
+      {/* Dynamic books section – now safe even if books isn't an array */}
       <div className="book-section row mt-4">
         {loading ? (
           <Col xs={12} className="text-center">
@@ -137,7 +164,7 @@ function HomePage() {
           <Col xs={12} className="text-center">
             <Alert variant="danger">{error}</Alert>
           </Col>
-        ) : books.length === 0 ? (
+        ) : !Array.isArray(books) || books.length === 0 ? (
           <Col xs={12} className="text-center">
             <p>No books found. Try refreshing the page.</p>
           </Col>
@@ -198,6 +225,7 @@ function HomePage() {
         )}
       </div>
 
+      {/* Testimonials section */}
       <div className="testimonials-section my-5 text-center">
         <h2 className="section-title text-primary">What Readers Say</h2>
         <blockquote className="blockquote">
