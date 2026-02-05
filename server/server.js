@@ -1,21 +1,32 @@
-const bcrypt = require('bcrypt');
-const saltRounds = 10;
+// ========= CORE & SECURITY =========
 const express = require('express');
 const session = require('express-session');
+const MemoryStore = require('memorystore')(session);
 const crypto = require('crypto');
 const axios = require('axios');
 const { Pool } = require('pg');
 const cors = require('cors');
 const path = require('path');
+const helmet = require('helmet');
+const compression = require('compression');
+const NodeCache = require('node-cache');
+// const bcrypt = require('bcrypt'); // keep for future secure passwords
 
 const app = express();
 const port = process.env.PORT || 3000;
+const isProd = process.env.NODE_ENV === 'production';
+
+// ========= CACHES =========
+const homeBooksCache = new NodeCache({ stdTTL: 60 * 10 }); // 10 minutes
 
 // ========= SESSION SECRET =========
 const secretKey =
   process.env.SESSION_SECRET ||
   process.env.JWT_SECRET ||
   crypto.randomBytes(32).toString('hex');
+
+// ========= TRUST PROXY (Render / reverse proxies) =========
+app.set('trust proxy', 1);
 
 // ========= CORS =========
 const allowedOrigins = [
@@ -27,7 +38,6 @@ const allowedOrigins = [
   'https://worthy-reads.onrender.com',
 ];
 
-// Preflight
 app.options(
   '*',
   cors({
@@ -38,15 +48,13 @@ app.options(
   })
 );
 
-// Main CORS
 app.use(
   cors({
     origin: (origin, callback) => {
       if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error('CORS blocked'));
+        return callback(null, true);
       }
+      return callback(new Error('CORS blocked'));
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
@@ -54,21 +62,32 @@ app.use(
   })
 );
 
+// ========= SECURITY & PERFORMANCE MIDDLEWARE =========
+app.use(
+  helmet({
+    contentSecurityPolicy: false,
+  })
+);
+app.use(compression());
+
 // ========= BODY & STATIC =========
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 
-// ========= SESSIONS =========
+// ========= SESSIONS (memorystore) =========
 app.use(
   session({
+    store: new MemoryStore({
+      checkPeriod: 1000 * 60 * 60 * 24, // prune expired entries every 24h
+    }),
     secret: secretKey,
     resave: false,
     saveUninitialized: false,
     cookie: {
-      secure: process.env.NODE_ENV === 'production',
+      secure: isProd,
       httpOnly: true,
-      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+      sameSite: isProd ? 'none' : 'lax',
       maxAge: 1000 * 60 * 60 * 24 * 7,
     },
   })
@@ -102,14 +121,69 @@ pool
   .catch((err) => console.error('❌ DB Error:', err));
 
 // ========= ERROR HELPER =========
-function handleError(res, error) {
+function handleError(res, error, status = 500) {
   console.error('Server Error:', error);
-  res.status(500).json({ error: 'Internal Server Error' });
+  res.status(status).json({ error: 'Internal Server Error' });
 }
 
+// ========= HEALTH CHECK =========
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok', time: new Date().toISOString() });
+});
 
+// ========= HOME BOOKS (Google Books via Express, cached) =========
+app.get('/api/home-books', async (req, res) => {
+  try {
+    const cacheKey = 'home-books';
+    const cached = homeBooksCache.get(cacheKey);
+    if (cached) {
+      return res.json(cached);
+    }
 
+    const searchKeywords = [
+      'new',
+      'bestsellers',
+      'fiction',
+      'history',
+      'science',
+      'fantasy',
+      'romance',
+      'computers',
+    ];
+    const randomKeyword =
+      searchKeywords[Math.floor(Math.random() * searchKeywords.length)];
 
+    const gbRes = await axios.get(
+      'https://www.googleapis.com/books/v1/volumes',
+      {
+        params: {
+          q: randomKeyword,
+          maxResults: 4,
+          key: process.env.GOOGLE_BOOKS_API_KEY,
+        },
+        timeout: 5000,
+      }
+    );
+
+    const items = gbRes.data.items || [];
+
+    homeBooksCache.set(cacheKey, items);
+
+    res.json(items);
+  } catch (err) {
+    console.error(
+      'Home-books Google API error:',
+      err.response?.status,
+      err.message
+    );
+    if (err.response?.status === 429) {
+      return res.status(429).json({ error: 'Google Books rate limit hit' });
+    }
+    return res.status(500).json({ error: 'Failed to fetch home books' });
+  }
+});
+
+// =======================
 // AUTH ROUTES
 // =======================
 
@@ -123,17 +197,15 @@ app.post('/api/register', async (req, res) => {
   }
 
   try {
-    // users table has username + password (plain), NOT email/password_hash
     const existing = await pool.query(
       'SELECT user_id FROM users WHERE username = $1',
-      [email] // we treat email as username
+      [email]
     );
 
     if (existing.rows.length > 0) {
       return res.status(400).json({ error: 'Email already registered' });
     }
 
-    // For now we store password as-is to match your schema (no password_hash column)
     const result = await pool.query(
       `INSERT INTO users (username, password, first_name, last_name)
        VALUES ($1, $2, $3, $4)
@@ -142,7 +214,6 @@ app.post('/api/register', async (req, res) => {
     );
 
     const user = result.rows[0];
-
     req.session.userId = user.user_id;
 
     res.status(201).json({
@@ -157,17 +228,19 @@ app.post('/api/register', async (req, res) => {
     });
   } catch (error) {
     console.error('💥 Register error:', error);
-    return res.status(500).json({ error: 'Internal Server Error' });
+    return handleError(res, error);
   }
 });
 
 // LOGIN
 app.post('/api/login', async (req, res) => {
   const { email, password } = req.body;
-  console.log('🔍 Login attempt:', { email, password_length: password?.length });
+  console.log('🔍 Login attempt:', {
+    email,
+    password_length: password?.length,
+  });
 
   try {
-    // Look up by username (your "email" field on the form)
     const result = await pool.query(
       'SELECT user_id, username, password FROM users WHERE username = $1',
       [email]
@@ -181,7 +254,6 @@ app.post('/api/login', async (req, res) => {
 
     const user = result.rows[0];
 
-    // Compare plain password (because DB stores plain "password")
     const isMatch = password === user.password;
     console.log('✅ password match:', isMatch);
 
@@ -198,15 +270,20 @@ app.post('/api/login', async (req, res) => {
     });
   } catch (error) {
     console.error('💥 Login error:', error);
-    res.status(500).json({ error: 'Server error' });
+    return handleError(res, error);
   }
 });
 
-
-
+// Current session info
+app.get('/api/me', (req, res) => {
+  if (!req.session.userId) {
+    return res.status(401).json({ user: null });
+  }
+  res.json({ userId: req.session.userId });
+});
 
 // =======================
-// BOOK ROUTES (rich schema)
+// BOOK ROUTES
 // =======================
 
 // GET books by user
@@ -237,7 +314,7 @@ app.get('/api/books/:userId', async (req, res) => {
   }
 });
 
-// ADD book
+// ADD book (still calls Google Books once per add)
 app.post('/api/books', async (req, res) => {
   const { title, author, user_id } = req.body;
 
@@ -262,6 +339,7 @@ app.post('/api/books', async (req, res) => {
             maxResults: 1,
             key: process.env.GOOGLE_BOOKS_API_KEY,
           },
+          timeout: 5000,
         }
       );
 
@@ -277,7 +355,10 @@ app.post('/api/books', async (req, res) => {
         preview_link = info.previewLink || null;
       }
     } catch (gbError) {
-      console.warn('Google Books fetch failed, continuing without extra data');
+      console.warn(
+        'Google Books fetch failed, continuing without extra data:',
+        gbError.message
+      );
     }
 
     const result = await pool.query(
@@ -293,7 +374,7 @@ app.post('/api/books', async (req, res) => {
         description_book,
         categories,
         preview_link,
-        0, // start rating at 0 (or 1 if you have a CHECK)
+        0,
       ]
     );
 
@@ -353,6 +434,16 @@ app.put('/api/books/:bookId/rating', async (req, res) => {
   } catch (error) {
     handleError(res, error);
   }
+});
+
+// ========= 404 & ERROR HANDLERS =========
+app.use((req, res) => {
+  res.status(404).json({ error: 'Not Found' });
+});
+
+app.use((err, req, res, next) => {
+  console.error('Unhandled error middleware:', err);
+  res.status(500).json({ error: 'Internal Server Error' });
 });
 
 // =======================

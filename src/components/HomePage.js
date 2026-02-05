@@ -1,53 +1,65 @@
-import React, { useEffect, useState } from 'react';
-import { Row, Col, Card, Spinner, Alert, } from 'react-bootstrap';
+import React, { useEffect, useRef, useState } from 'react';
+import { Row, Col, Card, Spinner, Alert } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import Rating from './Rating';
 import './HomePage.css';
 import axios from 'axios';
 
 function HomePage() {
-  const [books, setBooks] = useState( [] );
-  const [loading, setLoading] = useState( true );
-  const [error, setError] = useState( null );
+  const [books, setBooks] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  useEffect( () => {
-    const fetchBooks = async () => {
+  // Prevent duplicate calls in React StrictMode / remounts
+  const hasFetchedRef = useRef(false);
+
+  useEffect(() => {
+    if (hasFetchedRef.current) {
+      setLoading(false);
+      return;
+    }
+    hasFetchedRef.current = true;
+
+    const controller = new AbortController();
+
+    const fetchHomeBooks = async () => {
       try {
-        const searchKeywords = ['new', 'bestsellers', 'fiction', 'history', 'science', 'fantasy', 'romance', 'computers'];
-        const randomKeyword = searchKeywords[Math.floor( Math.random() * searchKeywords.length )];
+        const res = await axios.get('/api/home-books', {
+          signal: controller.signal,
+        });
 
-        const response = await axios.get( 'https://www.googleapis.com/books/v1/volumes', {
-          params: {
-            q: randomKeyword,
-            maxResults: 4,
-          },
-        } );
+        setBooks(res.data || []);
+        setError(null);
+      } catch (err) {
+        if (axios.isCancel(err)) return;
 
-        setBooks( response.data.items || [] );
-      } catch ( error ) {
-        console.error( 'Error fetching books:', error );
-        setError( 'Failed to fetch books. Please try again.' );
+        console.error('Error fetching home books:', err);
+
+        if (err.response?.status === 429) {
+          setError(
+            'Too many requests at the moment. Please try again in a bit.'
+          );
+        } else {
+          setError('Failed to fetch books. Please try again.');
+        }
       } finally {
-        setLoading( false );
+        setLoading(false);
       }
     };
 
-    fetchBooks();
-  }, [] );
+    fetchHomeBooks();
+
+    return () => controller.abort();
+  }, []);
 
   return (
     <main className="container mt-5">
-
       <div className="jumbotron text-center p-5 bg-light shadow">
         <div className="container">
-
-
           <Row className="align-items-center justify-content-center my-2">
-
-            <h2 className="section-title text-primary  pb-5 fs-1">
+            <h2 className="section-title text-primary pb-5 fs-1">
               Welcome to Worthy Reads
             </h2>
-
 
             <Col md={6} className="text-center">
               <img
@@ -57,22 +69,22 @@ function HomePage() {
               />
             </Col>
             <Col md={6} className="d-flex flex-column justify-content-center">
-              <p className="lead gradient-lead  fst-italic fs-3">
-                " Books have always been a source of inspiration and knowledge in my life.
-                I wanted to create a space where readers can not only find their next great read
-                but also connect with a community of like-minded individuals."
+              <p className="lead gradient-lead fst-italic fs-3">
+                " Books have always been a source of inspiration and knowledge
+                in my life. I wanted to create a space where readers can not
+                only find their next great read but also connect with a
+                community of like-minded individuals."
                 <br />
                 <strong className="text-primary pb-5">Alejandro Armas</strong>
               </p>
-
             </Col>
           </Row>
-
 
           <Row className="align-items-center justify-content-center my-4">
             <Col md={6}>
               <p className="lead graient-lead text-black fs-2">
-                This site was created for the love of books. I hope you enjoy it and share it with family and friends.
+                This site was created for the love of books. I hope you enjoy it
+                and share it with family and friends.
               </p>
             </Col>
             <Col md={6}>
@@ -85,22 +97,30 @@ function HomePage() {
           </Row>
 
           <div className="features-section my-5">
-            <h2 className="section-title text-primary pb-5 fs-1">Join the Club</h2>
+            <h2 className="section-title text-primary pb-5 fs-1">
+              Join the Club
+            </h2>
             <Row className="text-center pb-5">
               <Col md={4}>
                 <i className="fas fa-search feature-icon text-primary mb-3"></i>
-                <h5 className='fw-bold text-white'>Search Books</h5>
-                <p className="lead graient-lead fs-4">Find your favorite books by title or author.</p>
+                <h5 className="fw-bold text-white">Search Books</h5>
+                <p className="lead graient-lead fs-4">
+                  Find your favorite books by title or author.
+                </p>
               </Col>
               <Col md={4}>
                 <i className="fas fa-users feature-icon text-primary mb-3"></i>
-                <h5 className='fw-bold text-white'>Community</h5>
-                <p className="lead graient-lead fs-4">Connect with other book lovers and share reviews.</p>
+                <h5 className="fw-bold text-white">Community</h5>
+                <p className="lead graient-lead fs-4">
+                  Connect with other book lovers and share reviews.
+                </p>
               </Col>
               <Col md={4}>
                 <i className="fas fa-bookmark feature-icon text-primary mb-3"></i>
-                <h5 className='fw-bold text-white'>Bookmarks</h5>
-                <p className="lead graient-lead fs-4">Save books to your personal collection.</p>
+                <h5 className="fw-bold text-white">Bookmarks</h5>
+                <p className="lead graient-lead fs-4">
+                  Save books to your personal collection.
+                </p>
               </Col>
             </Row>
           </div>
@@ -117,56 +137,74 @@ function HomePage() {
           <Col xs={12} className="text-center">
             <Alert variant="danger">{error}</Alert>
           </Col>
+        ) : books.length === 0 ? (
+          <Col xs={12} className="text-center">
+            <p>No books found. Try refreshing the page.</p>
+          </Col>
         ) : (
-          books.map( ( book, index ) => (
+          books.map((book, index) => (
             <Col sm={6} md={4} lg={3} key={index} className="mb-3">
               <Card className="shadow-sm h-100">
                 <Card.Body>
                   <Card.Img
                     variant="top"
                     src={
-                      book.volumeInfo.imageLinks?.extraLarge ||
-                      book.volumeInfo.imageLinks?.large ||
-                      book.volumeInfo.imageLinks?.medium ||
-                      book.volumeInfo.imageLinks?.thumbnail ||
+                      book.volumeInfo?.imageLinks?.extraLarge ||
+                      book.volumeInfo?.imageLinks?.large ||
+                      book.volumeInfo?.imageLinks?.medium ||
+                      book.volumeInfo?.imageLinks?.thumbnail ||
                       'https://via.placeholder.com/300'
                     }
-                    alt={book.volumeInfo.title}
+                    alt={book.volumeInfo?.title}
                     className="img-fluid clickable-image mb-6"
-                    onClick={() => book.volumeInfo.previewLink && window.open( book.volumeInfo.previewLink, '_blank' )}
+                    onClick={() =>
+                      book.volumeInfo?.previewLink &&
+                      window.open(book.volumeInfo.previewLink, '_blank')
+                    }
                   />
 
-                  <Card.Title>{book.volumeInfo.title}</Card.Title>
+                  <Card.Title>{book.volumeInfo?.title}</Card.Title>
                   <Card.Subtitle className="text-muted">
-                    By {book.volumeInfo.authors ? book.volumeInfo.authors.join( ', ' ) : 'Unknown'}
+                    By{' '}
+                    {book.volumeInfo?.authors
+                      ? book.volumeInfo.authors.join(', ')
+                      : 'Unknown'}
                   </Card.Subtitle>
                   <div className="rating-stars my-2">
-                    <Rating initialRating={book.volumeInfo.averageRating || 0} />
+                    <Rating
+                      initialRating={book.volumeInfo?.averageRating || 0}
+                    />
                   </div>
-                  {book.volumeInfo.categories && (
+                  {book.volumeInfo?.categories && (
                     <div className="book-categories mt-2">
                       <strong>Categories: </strong>
-                      {book.volumeInfo.categories.map( ( category, index ) => (
+                      {book.volumeInfo.categories.map((category, i) => (
                         <React.Fragment key={category}>
-                          <Link to={`/category/${category}`} className="text-info">
+                          <Link
+                            to={`/category/${category}`}
+                            className="text-info"
+                          >
                             {category}
                           </Link>
-                          {index < book.volumeInfo.categories.length - 1 && ', '}
+                          {i < book.volumeInfo.categories.length - 1 && ', '}
                         </React.Fragment>
-                      ) )}
+                      ))}
                     </div>
                   )}
                 </Card.Body>
               </Card>
             </Col>
-          ) )
+          ))
         )}
       </div>
 
       <div className="testimonials-section my-5 text-center">
         <h2 className="section-title text-primary">What Readers Say</h2>
         <blockquote className="blockquote">
-          <p>"Worthy Reads has completely transformed the way I find and organize my books."</p>
+          <p>
+            "Worthy Reads has completely transformed the way I find and organize
+            my books."
+          </p>
           <footer className="blockquote-footer">Noam Chomsky</footer>
         </blockquote>
         <blockquote className="blockquote">
