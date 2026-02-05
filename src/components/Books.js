@@ -15,13 +15,21 @@ import BookCount from './BookCount';
 import './Books.css';
 
 function Books() {
-  const [books, setBooks] = useState([]);
+  const [books, setBooks] = useState([]); // always treat as array
   const [title, setTitle] = useState('');
   const [author, setAuthor] = useState('');
   const [userId] = useState(localStorage.getItem('userId'));
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
   const [bookCount, setBookCount] = useState(0);
+
+  // Small helper to normalize API data into an array
+  const normalizeBooks = (data) => {
+    if (Array.isArray(data)) return data;
+    if (Array.isArray(data?.books)) return data.books;
+    if (Array.isArray(data?.items)) return data.items;
+    return [];
+  };
 
   useEffect(() => {
     if (!userId) {
@@ -36,12 +44,14 @@ function Books() {
         setError(null);
 
         const response = await fetchBooks(userId);
-        const rows = response.data || [];
+        const rows = normalizeBooks(response.data);
         setBooks(rows);
         setBookCount(rows.length);
       } catch (err) {
         console.error('Error fetching books:', err);
         setError('Failed to fetch books. Please try again.');
+        setBooks([]);
+        setBookCount(0);
       } finally {
         setLoading(false);
       }
@@ -58,12 +68,13 @@ function Books() {
       return;
     }
 
-    try {
+    try:
       setError(null);
       await addBook({ title, author, user_id: userId });
 
+      // Reload books after adding
       const response = await fetchBooks(userId);
-      const rows = response.data || [];
+      const rows = normalizeBooks(response.data);
       setBooks(rows);
       setBookCount(rows.length);
 
@@ -149,51 +160,57 @@ function Books() {
           )}
 
           <Row className="mt-3 book-list justify-content-center">
-            {books.map((book) => (
-              <Col sm={12} md={6} lg={4} key={book.id} className="mb-3">
-                <Card className="book-container">
-                  <Card.Body className="card-body">
-                    <div className="book-info">
-                      <div className="book-details">
-                        <div className="d-flex justify-content-between align-items-center">
-                          <div className="title-author">
-                            <Card.Title>{book.title}</Card.Title>
-                            <Card.Subtitle className="author-name">
-                              By {book.author}
-                            </Card.Subtitle>
+            {!Array.isArray(books) || books.length === 0 ? (
+              <Col xs={12} className="text-center">
+                <p>No books found. Add your first book above.</p>
+              </Col>
+            ) : (
+              books.map((book) => (
+                <Col sm={12} md={6} lg={4} key={book.id} className="mb-3">
+                  <Card className="book-container">
+                    <Card.Body className="card-body">
+                      <div className="book-info">
+                        <div className="book-details">
+                          <div className="d-flex justify-content-between align-items-center">
+                            <div className="title-author">
+                              <Card.Title>{book.title}</Card.Title>
+                              <Card.Subtitle className="author-name">
+                                By {book.author}
+                              </Card.Subtitle>
+                            </div>
                           </div>
-                        </div>
 
-                        <div className="rating-title-author mt-2">
-                          <Rating
-                            initialRating={book.rating || 0}
-                            onChange={(rate) =>
-                              handleRatingChange(book.id, rate)
-                            }
-                          />
-                        </div>
-
-                        {book.category && (
-                          <div className="book-categories mt-2">
-                            <strong>Category: </strong>
-                            {book.category}
+                          <div className="rating-title-author mt-2">
+                            <Rating
+                              initialRating={book.rating || 0}
+                              onChange={(rate) =>
+                                handleRatingChange(book.id, rate)
+                              }
+                            />
                           </div>
-                        )}
 
-                        <div className="button-group mt-2">
-                          <Button
-                            className="custom-button custom-button-primary"
-                            onClick={() => handleDeleteBook(book.id)}
-                          >
-                            Delete
-                          </Button>
+                          {book.category && (
+                            <div className="book-categories mt-2">
+                              <strong>Category: </strong>
+                              {book.category}
+                            </div>
+                          )}
+
+                          <div className="button-group mt-2">
+                            <Button
+                              className="custom-button custom-button-primary"
+                              onClick={() => handleDeleteBook(book.id)}
+                            >
+                              Delete
+                            </Button>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </Card.Body>
-                </Card>
-              </Col>
-            ))}
+                    </Card.Body>
+                  </Card>
+                </Col>
+              ))
+            )}
           </Row>
         </>
       )}
