@@ -166,7 +166,13 @@ function Books() {
               </Col>
             ) : (
               books.map((book) => (
-                <Col sm={12} md={6} lg={4} key={book.id} className="mb-3">
+                <Col
+                  sm={12}
+                  md={6}
+                  lg={4}
+                  key={book.id || book.book_id}
+                  className="mb-3"
+                >
                   <Card className="book-container">
                     <Card.Body className="card-body">
                       <div className="book-info">
@@ -180,6 +186,38 @@ function Books() {
                             </div>
                           </div>
 
+                          {/* GOOGLE IMAGE + PREVIEW */}
+                          <Card.Img
+                            variant="top"
+                            src={
+                              book.image_link ||
+                              'https://via.placeholder.com/300'
+                            }
+                            alt={book.title}
+                            className="img-fluid mt-2 mb-2 clickable-image"
+                            onClick={() =>
+                              book.preview_link &&
+                              window.open(book.preview_link, '_blank')
+                            }
+                          />
+
+                          {/* GOOGLE DESCRIPTION */}
+                          {book.description_book && (
+                            <p className="mt-2 small">
+                              {book.description_book}
+                            </p>
+                          )}
+
+                          {/* GOOGLE CATEGORIES */}
+                          {book.categories && (
+                            <div className="book-categories mt-2">
+                              <strong>Categories: </strong>
+                              {Array.isArray(book.categories)
+                                ? book.categories.join(', ')
+                                : book.categories}
+                            </div>
+                          )}
+
                           <div className="rating-title-author mt-2">
                             <Rating
                               initialRating={book.rating || 0}
@@ -188,13 +226,6 @@ function Books() {
                               }
                             />
                           </div>
-
-                          {book.category && (
-                            <div className="book-categories mt-2">
-                              <strong>Category: </strong>
-                              {book.category}
-                            </div>
-                          )}
 
                           <div className="button-group mt-2">
                             <Button
