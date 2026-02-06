@@ -7,9 +7,10 @@ const api = axios.create({
     process.env.REACT_APP_API_URL ||
     (process.env.NODE_ENV === 'development'
       ? 'http://localhost:3000'
-      : ''),
+      : 'https://worthy-reads.onrender.com'), // 👈 add this
   withCredentials: true,
 });
+
 
 export const loginUser = async ({ email, password }) => {
   try {

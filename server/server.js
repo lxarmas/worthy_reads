@@ -206,6 +206,7 @@ app.post('/api/register', async (req, res) => {
       return res.status(400).json({ error: 'Email already registered' });
     }
 
+    // 👇 store password directly (simple mode)
     const result = await pool.query(
       `INSERT INTO users (username, password, first_name, last_name)
        VALUES ($1, $2, $3, $4)
@@ -231,6 +232,7 @@ app.post('/api/register', async (req, res) => {
     return handleError(res, error);
   }
 });
+
 
 // LOGIN
 app.post('/api/login', async (req, res) => {
