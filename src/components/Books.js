@@ -68,7 +68,7 @@ function Books() {
       return;
     }
 
-    try:
+    try {
       setError(null);
       await addBook({ title, author, user_id: userId });
 
