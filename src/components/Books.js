@@ -187,20 +187,24 @@ function Books() {
                           </div>
 
                           {/* GOOGLE IMAGE + PREVIEW */}
-                          <Card.Img
-                            variant="top"
-                            src={
-                              book.image_link ||
-                             'https://placehold.co/300x450?text=No+Cover'
+                  <Card.Img
+                  variant="top"
+                  src={
+                  book.image_link
+                  ? book.image_link.replace(/^http:/, "https:")
+                 : "https://placehold.co/300x450?text=No+Cover"
+                }
+                alt={book.title}
+                className="img-fluid mt-2 mb-2 clickable-image"
+              onClick={() =>
+              book.preview_link &&
+               window.open(book.preview_link, "_blank")
+              }
+              onError={(e) => {
+               e.currentTarget.src = "https://placehold.co/300x450?text=No+Cover";
+              }}
+              />
 
-                            }
-                            alt={book.title}
-                            className="img-fluid mt-2 mb-2 clickable-image"
-                            onClick={() =>
-                              book.preview_link &&
-                              window.open(book.preview_link, '_blank')
-                            }
-                          />
 
                           {/* GOOGLE DESCRIPTION */}
                           {book.description_book && (
