@@ -180,7 +180,8 @@ function HomePage() {
                       book.volumeInfo?.imageLinks?.large ||
                       book.volumeInfo?.imageLinks?.medium ||
                       book.volumeInfo?.imageLinks?.thumbnail ||
-                      'https://via.placeholder.com/300'
+                      'https://placehold.co/300x450?text=No+Cover'
+
                     }
                     alt={book.volumeInfo?.title}
                     className="img-fluid clickable-image mb-6"

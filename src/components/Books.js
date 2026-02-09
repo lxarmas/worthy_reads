@@ -191,7 +191,8 @@ function Books() {
                             variant="top"
                             src={
                               book.image_link ||
-                              'https://via.placeholder.com/300'
+                             'https://placehold.co/300x450?text=No+Cover'
+
                             }
                             alt={book.title}
                             className="img-fluid mt-2 mb-2 clickable-image"
