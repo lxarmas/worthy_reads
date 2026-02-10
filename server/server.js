@@ -345,17 +345,25 @@ app.post('/api/books', async (req, res) => {
         }
       );
 
-      const item = googleRes.data.items?.[0];
-      if (item) {
-        const info = item.volumeInfo || {};
-        image_link =
-          info.imageLinks?.thumbnail ||
-          info.imageLinks?.smallThumbnail ||
-          null;
-        categories = info.categories || null;
-        description_book = info.description || null;
-        preview_link = info.previewLink || null;
-      }
+   const item = googleRes.data.items?.[0];
+if (item) {
+  const info = item.volumeInfo || {};
+
+  // normalize Google image URL to HTTPS to avoid mixed-content errors
+  const rawImage =
+    info.imageLinks?.thumbnail ||
+    info.imageLinks?.smallThumbnail ||
+    null;
+
+  image_link = rawImage
+    ? rawImage.replace(/^http:/, 'https:')
+    : null;
+
+  categories = info.categories || null;
+  description_book = info.description || null;
+  preview_link = info.previewLink || null;
+}
+
     } catch (gbError) {
       console.warn(
         'Google Books fetch failed, continuing without extra data:',

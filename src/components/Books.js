@@ -60,51 +60,49 @@ function Books() {
     loadBooks();
   }, [userId]);
 
-  const handleAddBook = async (event) => {
-    event.preventDefault();
-
-    if (!userId) {
-      setError('No user found. Please log in again.');
-      return;
-    }
-
-    try {
-      setError(null);
-      await addBook({ title, author, user_id: userId });
-
-      // Reload books after adding
-      const response = await fetchBooks(userId);
-      const rows = normalizeBooks(response.data);
-      setBooks(rows);
-      setBookCount(rows.length);
-
-      setTitle('');
-      setAuthor('');
-    } catch (err) {
-      console.error('Error adding book:', err);
-      setError('Failed to add book. Please try again.');
-    }
-  };
-
   const handleDeleteBook = async (bookId) => {
+    // Log to confirm what ID you are sending
+    console.log('Deleting bookId:', bookId);
+
     try {
       setError(null);
+
+      // Call your API helper
       const response = await deleteBook(bookId);
+      console.log('Delete response:', response);
 
-      if (response.data?.success) {
-        setBooks((prev) => prev.filter((book) => book.id !== bookId));
+      // ✅ Be less strict: accept 200/204 OR an explicit success flag
+      const okStatus =
+        response?.status === 200 || response?.status === 204;
+      const okFlag = response?.data?.success === true;
 
-        if (typeof response.data.bookCount === 'number') {
+      if (okStatus || okFlag) {
+        // ✅ Use the same ID logic you use in the key (id || book_id)
+        setBooks((prev) =>
+          prev.filter(
+            (book) => (book.id || book.book_id) !== bookId
+          )
+        );
+
+        // If backend sends an updated count, use it
+        if (typeof response?.data?.bookCount === 'number') {
           setBookCount(response.data.bookCount);
         } else {
+          // Otherwise, decrement safely
           setBookCount((prev) => Math.max(prev - 1, 0));
         }
+      } else {
+        // Optional: surface a clear message if the API didn't confirm
+        console.warn('Delete did not return success or OK status');
+        setError('Could not confirm delete from server.');
       }
     } catch (err) {
       console.error('Error deleting book:', err);
       setError('Failed to delete book. Please try again.');
     }
   };
+
+
 
   const handleRatingChange = (bookId, rate) => {
     setBooks((prevBooks) =>
@@ -233,12 +231,13 @@ function Books() {
                           </div>
 
                           <div className="button-group mt-2">
-                            <Button
-                              className="custom-button custom-button-primary"
-                              onClick={() => handleDeleteBook(book.id)}
-                            >
-                              Delete
-                            </Button>
+                           <Button
+  className="custom-button custom-button-primary"
+  onClick={() => handleDeleteBook(book.id || book.book_id)}
+>
+  Delete
+</Button>
+
                           </div>
                         </div>
                       </div>
