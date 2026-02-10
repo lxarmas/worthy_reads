@@ -60,39 +60,63 @@ function Books() {
     loadBooks();
   }, [userId]);
 
+  // ADD BOOK
+  const handleAddBook = async (event) => {
+    event.preventDefault();
+
+    if (!userId) {
+      setError('No user found. Please log in again.');
+      return;
+    }
+
+    try {
+      setError(null);
+
+      // call backend to add a book
+      await addBook({ title, author, user_id: userId });
+
+      // reload books after adding
+      const response = await fetchBooks(userId);
+      const rows = normalizeBooks(response.data);
+      setBooks(rows);
+      setBookCount(rows.length);
+
+      // clear form
+      setTitle('');
+      setAuthor('');
+    } catch (err) {
+      console.error('Error adding book:', err);
+      setError('Failed to add book. Please try again.');
+    }
+  };
+
+  // DELETE BOOK
   const handleDeleteBook = async (bookId) => {
-    // Log to confirm what ID you are sending
     console.log('Deleting bookId:', bookId);
 
     try {
       setError(null);
 
-      // Call your API helper
       const response = await deleteBook(bookId);
       console.log('Delete response:', response);
 
-      // ✅ Be less strict: accept 200/204 OR an explicit success flag
+      // accept 200/204 OR explicit success flag
       const okStatus =
         response?.status === 200 || response?.status === 204;
       const okFlag = response?.data?.success === true;
 
       if (okStatus || okFlag) {
-        // ✅ Use the same ID logic you use in the key (id || book_id)
+        // use book_id which comes from the backend
         setBooks((prev) =>
-          prev.filter(
-            (book) => (book.id || book.book_id) !== bookId
-          )
+          prev.filter((book) => book.book_id !== bookId)
         );
 
-        // If backend sends an updated count, use it
         if (typeof response?.data?.bookCount === 'number') {
           setBookCount(response.data.bookCount);
         } else {
-          // Otherwise, decrement safely
           setBookCount((prev) => Math.max(prev - 1, 0));
         }
       } else {
-        // Optional: surface a clear message if the API didn't confirm
         console.warn('Delete did not return success or OK status');
         setError('Could not confirm delete from server.');
       }
@@ -102,12 +126,11 @@ function Books() {
     }
   };
 
-
-
+  // LOCAL RATING UPDATE
   const handleRatingChange = (bookId, rate) => {
     setBooks((prevBooks) =>
       prevBooks.map((book) =>
-        book.id === bookId ? { ...book, rating: rate } : book
+        book.book_id === bookId ? { ...book, rating: rate } : book
       )
     );
     // later you can call an updateBookRating API here
@@ -168,7 +191,7 @@ function Books() {
                   sm={12}
                   md={6}
                   lg={4}
-                  key={book.id || book.book_id}
+                  key={book.book_id}
                   className="mb-3"
                 >
                   <Card className="book-container">
@@ -185,24 +208,24 @@ function Books() {
                           </div>
 
                           {/* GOOGLE IMAGE + PREVIEW */}
-                  <Card.Img
-                  variant="top"
-                  src={
-                  book.image_link
-                  ? book.image_link.replace(/^http:/, "https:")
-                 : "https://placehold.co/300x450?text=No+Cover"
-                }
-                alt={book.title}
-                className="img-fluid mt-2 mb-2 clickable-image"
-              onClick={() =>
-              book.preview_link &&
-               window.open(book.preview_link, "_blank")
-              }
-              onError={(e) => {
-               e.currentTarget.src = "https://placehold.co/300x450?text=No+Cover";
-              }}
-              />
-
+                          <Card.Img
+                            variant="top"
+                            src={
+                              book.image_link
+                                ? book.image_link.replace(/^http:/, 'https:')
+                                : 'https://placehold.co/300x450?text=No+Cover'
+                            }
+                            alt={book.title}
+                            className="img-fluid mt-2 mb-2 clickable-image"
+                            onClick={() =>
+                              book.preview_link &&
+                              window.open(book.preview_link, '_blank')
+                            }
+                            onError={(e) => {
+                              e.currentTarget.src =
+                                'https://placehold.co/300x450?text=No+Cover';
+                            }}
+                          />
 
                           {/* GOOGLE DESCRIPTION */}
                           {book.description_book && (
@@ -225,19 +248,20 @@ function Books() {
                             <Rating
                               initialRating={book.rating || 0}
                               onChange={(rate) =>
-                                handleRatingChange(book.id, rate)
+                                handleRatingChange(book.book_id, rate)
                               }
                             />
                           </div>
 
                           <div className="button-group mt-2">
-                           <Button
-  className="custom-button custom-button-primary"
-  onClick={() => handleDeleteBook(book.id || book.book_id)}
->
-  Delete
-</Button>
-
+                            <Button
+                              className="custom-button custom-button-primary"
+                              onClick={() =>
+                                handleDeleteBook(book.book_id)
+                              }
+                            >
+                              Delete
+                            </Button>
                           </div>
                         </div>
                       </div>
