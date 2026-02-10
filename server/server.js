@@ -36,6 +36,7 @@ const allowedOrigins = [
   'https://main.d1hr2gomzak89g.amplifyapp.com',
   'https://worthy-reads.vercel.app',
   'https://worthy-reads.onrender.com',
+   'https://worthy-reads-bjik73y1j-lxarmas-projects.vercel.app',
 ];
 
 app.options(
