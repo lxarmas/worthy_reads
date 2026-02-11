@@ -36,7 +36,7 @@ const allowedOrigins = [
   'https://main.d1hr2gomzak89g.amplifyapp.com',
   'https://worthy-reads.vercel.app',
   'https://worthy-reads.onrender.com',
-   'https://worthy-reads-bjik73y1j-lxarmas-projects.vercel.app',
+  'https://worthy-reads-bjik73y1j-lxarmas-projects.vercel.app',
 ];
 
 app.options(
@@ -207,7 +207,6 @@ app.post('/api/register', async (req, res) => {
       return res.status(400).json({ error: 'Email already registered' });
     }
 
-    // 👇 store password directly (simple mode)
     const result = await pool.query(
       `INSERT INTO users (username, password, first_name, last_name)
        VALUES ($1, $2, $3, $4)
@@ -233,7 +232,6 @@ app.post('/api/register', async (req, res) => {
     return handleError(res, error);
   }
 });
-
 
 // LOGIN
 app.post('/api/login', async (req, res) => {
@@ -317,7 +315,7 @@ app.get('/api/books/:userId', async (req, res) => {
   }
 });
 
-// ADD book (still calls Google Books once per add)
+// ADD book (Google Books enrichment per insert)
 app.post('/api/books', async (req, res) => {
   const { title, author, user_id } = req.body;
 
@@ -334,11 +332,14 @@ app.post('/api/books', async (req, res) => {
     let preview_link = null;
 
     try {
+      const normalizedTitle = title.trim();
+      const normalizedAuthor = author.trim();
+
       const googleRes = await axios.get(
         'https://www.googleapis.com/books/v1/volumes',
         {
           params: {
-            q: `${title} ${author}`,
+            q: `intitle:${normalizedTitle} inauthor:${normalizedAuthor}`,
             maxResults: 1,
             key: process.env.GOOGLE_BOOKS_API_KEY,
           },
@@ -346,25 +347,33 @@ app.post('/api/books', async (req, res) => {
         }
       );
 
-   const item = googleRes.data.items?.[0];
-if (item) {
-  const info = item.volumeInfo || {};
+      console.log(
+        'Google Books search for:',
+        normalizedTitle,
+        normalizedAuthor
+      );
+      console.log(JSON.stringify(googleRes.data, null, 2));
 
-  // normalize Google image URL to HTTPS to avoid mixed-content errors
-  const rawImage =
-    info.imageLinks?.thumbnail ||
-    info.imageLinks?.smallThumbnail ||
-    null;
+      const item = googleRes.data.items?.[0];
+      if (item) {
+        const info = item.volumeInfo || {};
 
-  image_link = rawImage
-    ? rawImage.replace(/^http:/, 'https:')
-    : null;
+        const rawImage =
+          info.imageLinks?.thumbnail ||
+          info.imageLinks?.smallThumbnail ||
+          null;
 
-  categories = info.categories || null;
-  description_book = info.description || null;
-  preview_link = info.previewLink || null;
-}
-
+        image_link = rawImage ? rawImage.replace(/^http:/, 'https:') : null;
+        categories = info.categories || null;
+        description_book = info.description || null;
+        preview_link = info.previewLink || null;
+      } else {
+        console.warn(
+          'No items returned for',
+          normalizedTitle,
+          normalizedAuthor
+        );
+      }
     } catch (gbError) {
       console.warn(
         'Google Books fetch failed, continuing without extra data:',
