@@ -78,6 +78,7 @@ function Books() {
       // reload books after adding
       const response = await fetchBooks(userId);
       const rows = normalizeBooks(response.data);
+      console.log('BOOKS FROM API:', rows);
       setBooks(rows);
       setBookCount(rows.length);
 
