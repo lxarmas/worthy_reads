@@ -35,7 +35,7 @@ const allowedOrigins = [
   'http://localhost:5173',
   'https://main.d1hr2gomzak89g.amplifyapp.com',
   'https://worthy-reads.vercel.app',
-  'https://worthy-reads.onrender.com',
+  'https://worthy-reads-1.onrender.com',
   'https://worthy-reads-bjik73y1j-lxarmas-projects.vercel.app',
 ];
 
