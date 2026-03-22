@@ -1,4 +1,5 @@
-// ========= CORE & SECURITY =========
+// ========= CORE // ========= CORE & SECURITY ========= SECURITY =========
+require('dotenv').config();
 const express = require('express');
 const session = require('express-session');
 const MemoryStore = require('memorystore')(session);
