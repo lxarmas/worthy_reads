@@ -14,16 +14,18 @@ import Rating from './Rating';
 import BookCount from './BookCount';
 import './Books.css';
 
+const API_URL =
+  process.env.REACT_APP_API_URL || 'https://worthy-reads.onrender.com';
+
 function Books() {
-  const [books, setBooks] = useState([]); // always treat as array
+  const [books, setBooks] = useState([]);
   const [title, setTitle] = useState('');
   const [author, setAuthor] = useState('');
-  const [userId] = useState(localStorage.getItem('userId'));
+  const [userId, setUserId] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
   const [bookCount, setBookCount] = useState(0);
 
-  // Small helper to normalize API data into an array
   const normalizeBooks = (data) => {
     if (Array.isArray(data)) return data;
     if (Array.isArray(data?.books)) return data.books;
@@ -31,19 +33,46 @@ function Books() {
     return [];
   };
 
+  // Step 1: get userId from session OR localStorage
   useEffect(() => {
-    if (!userId) {
-      setLoading(false);
-      setError('No user found. Please log in again.');
+    const stored = localStorage.getItem('userId');
+    if (stored) {
+      console.log('userId from localStorage:', stored);
+      setUserId(stored);
       return;
     }
+
+    // fallback: ask the backend who is logged in
+    fetch(`${API_URL}/api/me`, { credentials: 'include' })
+      .then((r) => r.json())
+      .then((data) => {
+        console.log('/api/me response:', data);
+        if (data?.userId) {
+          localStorage.setItem('userId', String(data.userId));
+          setUserId(String(data.userId));
+        } else {
+          setError('No user found. Please log in again.');
+          setLoading(false);
+        }
+      })
+      .catch((err) => {
+        console.error('/api/me error:', err);
+        setError('Could not verify session. Please log in again.');
+        setLoading(false);
+      });
+  }, []);
+
+  // Step 2: fetch books once userId is known
+  useEffect(() => {
+    if (!userId) return;
 
     const loadBooks = async () => {
       try {
         setLoading(true);
         setError(null);
-
+        console.log('Fetching books for userId:', userId);
         const response = await fetchBooks(userId);
+        console.log('BOOKS FROM API:', response.data);
         const rows = normalizeBooks(response.data);
         setBooks(rows);
         setBookCount(rows.length);
@@ -60,29 +89,19 @@ function Books() {
     loadBooks();
   }, [userId]);
 
-  // ADD BOOK
   const handleAddBook = async (event) => {
     event.preventDefault();
-
     if (!userId) {
       setError('No user found. Please log in again.');
       return;
     }
-
     try {
       setError(null);
-
-      // call backend to add a book
       await addBook({ title, author, user_id: userId });
-
-      // reload books after adding
       const response = await fetchBooks(userId);
       const rows = normalizeBooks(response.data);
-      console.log('BOOKS FROM API:', rows);
       setBooks(rows);
       setBookCount(rows.length);
-
-      // clear form
       setTitle('');
       setAuthor('');
     } catch (err) {
@@ -91,35 +110,20 @@ function Books() {
     }
   };
 
-  // DELETE BOOK
   const handleDeleteBook = async (bookId) => {
     console.log('Deleting bookId:', bookId);
-
     try {
       setError(null);
-
       const response = await deleteBook(bookId);
-      console.log('Delete response:', response);
-
-      // accept 200/204 OR explicit success flag
-      const okStatus =
-        response?.status === 200 || response?.status === 204;
+      const okStatus = response?.status === 200 || response?.status === 204;
       const okFlag = response?.data?.success === true;
-
       if (okStatus || okFlag) {
-        // use book_id which comes from the backend
-        setBooks((prev) =>
-          prev.filter((book) => book.book_id !== bookId)
-        );
-
+        setBooks((prev) => prev.filter((book) => book.book_id !== bookId));
         if (typeof response?.data?.bookCount === 'number') {
           setBookCount(response.data.bookCount);
         } else {
           setBookCount((prev) => Math.max(prev - 1, 0));
         }
-      } else {
-        console.warn('Delete did not return success or OK status');
-        setError('Could not confirm delete from server.');
       }
     } catch (err) {
       console.error('Error deleting book:', err);
@@ -127,21 +131,18 @@ function Books() {
     }
   };
 
-  // LOCAL RATING UPDATE
   const handleRatingChange = (bookId, rate) => {
     setBooks((prevBooks) =>
       prevBooks.map((book) =>
         book.book_id === bookId ? { ...book, rating: rate } : book
       )
     );
-    // later you can call an updateBookRating API here
   };
 
   return (
     <Container className="px-3">
       <h2 className="username-color">Welcome User</h2>
 
-      {/* Add Book Form */}
       <Form className="book-card" onSubmit={handleAddBook}>
         <Form.Group controlId="formTitle" className="w-100">
           <Form.Label>Title:</Form.Label>
@@ -152,7 +153,6 @@ function Books() {
             required
           />
         </Form.Group>
-
         <Form.Group controlId="formAuthor" className="mt-2 w-100">
           <Form.Label>Author:</Form.Label>
           <Form.Control
@@ -162,13 +162,11 @@ function Books() {
             required
           />
         </Form.Group>
-
         <Button variant="primary" type="submit" className="mt-3">
           Add Book
         </Button>
       </Form>
 
-      {/* Book Count + List */}
       <BookCount count={bookCount || books.length} />
 
       {loading ? (
@@ -188,13 +186,7 @@ function Books() {
               </Col>
             ) : (
               books.map((book) => (
-                <Col
-                  sm={12}
-                  md={6}
-                  lg={4}
-                  key={book.book_id}
-                  className="mb-3"
-                >
+                <Col sm={12} md={6} lg={4} key={book.book_id} className="mb-3">
                   <Card className="book-container">
                     <Card.Body className="card-body">
                       <div className="book-info">
@@ -208,7 +200,6 @@ function Books() {
                             </div>
                           </div>
 
-                          {/* GOOGLE IMAGE + PREVIEW */}
                           <Card.Img
                             variant="top"
                             src={
@@ -228,14 +219,10 @@ function Books() {
                             }}
                           />
 
-                          {/* GOOGLE DESCRIPTION */}
                           {book.description_book && (
-                            <p className="mt-2 small">
-                              {book.description_book}
-                            </p>
+                            <p className="mt-2 small">{book.description_book}</p>
                           )}
 
-                          {/* GOOGLE CATEGORIES */}
                           {book.categories && (
                             <div className="book-categories mt-2">
                               <strong>Categories: </strong>
@@ -257,9 +244,7 @@ function Books() {
                           <div className="button-group mt-2">
                             <Button
                               className="custom-button custom-button-primary"
-                              onClick={() =>
-                                handleDeleteBook(book.book_id)
-                              }
+                              onClick={() => handleDeleteBook(book.book_id)}
                             >
                               Delete
                             </Button>
