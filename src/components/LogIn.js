@@ -13,28 +13,23 @@ function LogIn() {
     setError('');
 
     try {
-      // ✅ send email + password (not username)
       const response = await loginUser({ email, password });
-      console.log('Login successful:', response);
+      console.log('Full response data:', JSON.stringify(response.data));
 
-      // ✅ response.data.user.id from your backend
       const userId = response.data?.user?.id;
+
       if (userId) {
-        localStorage.setItem('userId', userId);
+        localStorage.setItem('userId', String(userId));
+        navigate('/books');
+      } else {
+        setError('Login failed. Could not get user ID.');
       }
-
-      navigate('/books');
     } catch (err) {
-      console.error(
-        'Login error:',
-        err.response ? err.response.data : err.message
-      );
-
+      console.error('Login error:', err.response ? err.response.data : err.message);
       const errorMessage =
         err.response?.data?.error ||
         err.message ||
         'Login failed. Please try again.';
-
       setError(errorMessage);
     }
   };
@@ -73,8 +68,7 @@ function LogIn() {
             <div
               className="card-body p-5"
               style={{
-                background:
-                  'linear-gradient(135deg, rgb(170, 202, 197), rgb(110, 203, 192))',
+                background: 'linear-gradient(135deg, rgb(170, 202, 197), rgb(110, 203, 192))',
                 color: '#2c7a6e',
                 borderRadius: '34px',
                 boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
@@ -127,10 +121,7 @@ function LogIn() {
               </form>
 
               {error && (
-                <p
-                  className="text-danger mt-3"
-                  style={{ fontWeight: 'bold' }}
-                >
+                <p className="text-danger mt-3" style={{ fontWeight: 'bold' }}>
                   {error}
                 </p>
               )}
@@ -148,9 +139,8 @@ function LogIn() {
                     Forgot Password?
                   </Link>
                 </p>
-
                 <p>
-                  Don’t have an account?{' '}
+                  Don't have an account?{' '}
                   <Link
                     to="/register"
                     style={{
