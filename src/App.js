@@ -6,7 +6,7 @@ import About from './components/About';
 import Footer from './components/Footer';
 import LogIn from './components/LogIn';
 import Register from './components/Register';
-import Books from './components/Books';
+import Books from './components/BooksPage';
 import CategoryPage from './components/CategoryPage';
 import ForgotPassword from './components/ForgotPassword';
 
