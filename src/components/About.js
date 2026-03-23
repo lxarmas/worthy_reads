@@ -145,7 +145,7 @@ export default function About() {
           <div className="ab-portrait-frame">
             <div className="ab-portrait-marble" />
             <img
-              src="/images/image.jpg"
+              src="/images/ale_headshot.png"
               alt="Alejandro Armas"
               className="ab-portrait"
               onError={e => { e.currentTarget.style.display = 'none'; }}

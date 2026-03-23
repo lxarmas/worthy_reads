@@ -6,7 +6,7 @@ function Footer() {
             <div className="container text-center">
                 <div className="footer-content">
 
-                    <span style={{ color: 'black', marginRight: '4rem' }}>© 2025 WORTHY READS</span>
+                    <span style={{ color: 'black', marginRight: '4rem' }}>© 2026 WORTHY READS</span>
 
                 </div>
             </div>

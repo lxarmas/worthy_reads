@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-
 import { fetchBooks, addBook, deleteBook } from '../api';
 import Rating from './Rating';
 import BookCount from './BookCount';
@@ -9,17 +8,39 @@ import './Books.css';
 const API_URL =
   process.env.REACT_APP_API_URL || 'https://worthy-reads-1.onrender.com';
 
+const TRUNCATE_LENGTH = 140;
+
+function BookDescription({ text }) {
+  const [expanded, setExpanded] = useState(false);
+  if (!text) return null;
+  const isLong = text.length > TRUNCATE_LENGTH;
+  return (
+    <div className="bp-desc-wrap">
+      <p className="bp-description">
+        {expanded || !isLong ? text : text.slice(0, TRUNCATE_LENGTH) + '…'}
+      </p>
+      {isLong && (
+        <button
+          className="bp-desc-toggle"
+          onClick={() => setExpanded(e => !e)}
+        >
+          {expanded ? 'Show less ↑' : 'Read more ↓'}
+        </button>
+      )}
+    </div>
+  );
+}
+
 function Books() {
-  const [books, setBooks]       = useState([]);
-  const [title, setTitle]       = useState('');
-  const [author, setAuthor]     = useState('');
-  const [userId, setUserId]     = useState(null);
-  const [error, setError]       = useState(null);
-  const [loading, setLoading]   = useState(true);
-  const [adding, setAdding]     = useState(false);
+  const [books, setBooks]         = useState([]);
+  const [title, setTitle]         = useState('');
+  const [author, setAuthor]       = useState('');
+  const [userId, setUserId]       = useState(null);
+  const [error, setError]         = useState(null);
+  const [loading, setLoading]     = useState(true);
+  const [adding, setAdding]       = useState(false);
   const [bookCount, setBookCount] = useState(0);
 
-  // set marble CSS variable
   useEffect(() => {
     document.documentElement.style.setProperty('--marble-bg', `url(${marbleImg})`);
   }, []);
@@ -31,7 +52,6 @@ function Books() {
     return [];
   };
 
-  // get userId
   useEffect(() => {
     const stored = localStorage.getItem('userId');
     if (stored) { setUserId(stored); return; }
@@ -49,7 +69,6 @@ function Books() {
       .catch(() => { setError('Could not verify session.'); setLoading(false); });
   }, []);
 
-  // fetch books
   useEffect(() => {
     if (!userId) return;
     const load = async () => {
@@ -169,6 +188,7 @@ function Books() {
           <div className="bp-grid">
             {books.map(book => (
               <div key={book.book_id} className="bp-card">
+
                 {/* Cover */}
                 <div className="bp-cover-wrap">
                   <img
@@ -203,13 +223,7 @@ function Books() {
                     </div>
                   )}
 
-                  {book.description_book && (
-                    <p className="bp-description">
-                      {book.description_book.length > 120
-                        ? book.description_book.slice(0, 120) + '…'
-                        : book.description_book}
-                    </p>
-                  )}
+                  <BookDescription text={book.description_book} />
 
                   <div className="bp-rating-row">
                     <Rating
