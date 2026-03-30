@@ -6,11 +6,13 @@ function LogIn() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = async (event) => {
     event.preventDefault();
     setError('');
+    setIsLoading(true);
 
     try {
       const response = await loginUser({ email, password });
@@ -31,6 +33,8 @@ function LogIn() {
         err.message ||
         'Login failed. Please try again.';
       setError(errorMessage);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -40,6 +44,54 @@ function LogIn() {
         rel="stylesheet"
         href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"
       />
+
+      {/* ── Loading Overlay ── */}
+      {isLoading && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.45)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999,
+          }}
+        >
+          <div
+            style={{
+              background: 'linear-gradient(135deg, rgb(170, 202, 197), rgb(110, 203, 192))',
+              borderRadius: '24px',
+              padding: '2.5rem 3rem',
+              textAlign: 'center',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.25)',
+              minWidth: '260px',
+            }}
+          >
+            <div
+              className="spinner-border"
+              role="status"
+              style={{ color: '#2c7a6e', width: '3rem', height: '3rem' }}
+            >
+              <span className="visually-hidden">Loading...</span>
+            </div>
+            <p
+              style={{
+                marginTop: '1.2rem',
+                fontWeight: 'bold',
+                fontSize: '1.1rem',
+                color: '#2c7a6e',
+                marginBottom: 0,
+              }}
+            >
+              Logging you in…
+            </p>
+            <p style={{ color: '#2c7a6e', fontSize: '0.9rem', marginBottom: 0 }}>
+              Please wait a moment
+            </p>
+          </div>
+        </div>
+      )}
 
       <div className="text-center">
         <h1
@@ -87,6 +139,7 @@ function LogIn() {
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="Enter your email"
                     required
+                    disabled={isLoading}
                   />
                 </div>
 
@@ -102,21 +155,24 @@ function LogIn() {
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Enter your password"
                     required
+                    disabled={isLoading}
                   />
                 </div>
 
                 <button
                   type="submit"
                   className="btn btn-lg btn-block"
+                  disabled={isLoading}
                   style={{
                     backgroundColor: '#ffffff',
                     color: '#2c7a6e',
                     fontWeight: 'bold',
                     borderRadius: '50px',
                     border: '2px solid #ffffff',
+                    opacity: isLoading ? 0.7 : 1,
                   }}
                 >
-                  Login
+                  {isLoading ? 'Logging in…' : 'Login'}
                 </button>
               </form>
 
