@@ -12,6 +12,15 @@ const helmet = require('helmet');
 const compression = require('compression');
 const NodeCache = require('node-cache');
 
+const prisma = require('./prismaClient');
+const {
+  sendFriendRequest,
+  acceptFriendRequest,
+  rejectFriendRequest,
+  getFriends,
+  getPendingRequests,
+} = require('./services/friends');
+
 const app = express();
 const port = process.env.PORT || 3000;
 const isProd = process.env.NODE_ENV === 'production';
@@ -21,12 +30,13 @@ if (!process.env.DATABASE_URL) {
   console.error('❌ DATABASE_URL is not set. Exiting.');
   process.exit(1);
 }
+
 if (!process.env.GOOGLE_BOOKS_API_KEY) {
-  console.warn('⚠️  GOOGLE_BOOKS_API_KEY is not set — home-books will fail.');
+  console.warn('⚠️ GOOGLE_BOOKS_API_KEY is not set — Google Books enrichment may fail.');
 }
 
 // ========= CACHES =========
-const homeBooksCache = new NodeCache({ stdTTL: 60 * 10 }); // 10 minutes
+const homeBooksCache = new NodeCache({ stdTTL: 60 * 10 });
 
 // ========= SESSION SECRET =========
 const secretKey =
@@ -34,7 +44,7 @@ const secretKey =
   process.env.JWT_SECRET ||
   crypto.randomBytes(32).toString('hex');
 
-// ========= TRUST PROXY (Render / reverse proxies) =========
+// ========= TRUST PROXY =========
 app.set('trust proxy', 1);
 
 // ========= CORS =========
@@ -48,29 +58,20 @@ const allowedOrigins = [
   'https://worthy-reads-bjik73y1j-lxarmas-projects.vercel.app',
 ];
 
-app.options(
-  '*',
-  cors({
-    origin: allowedOrigins,
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-  })
-);
+const corsOptions = {
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    return callback(new Error('CORS blocked'));
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+};
 
-app.use(
-  cors({
-    origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin)) {
-        return callback(null, true);
-      }
-      return callback(new Error('CORS blocked'));
-    },
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-  })
-);
+app.options('*', cors(corsOptions));
+app.use(cors(corsOptions));
 
 // ========= SECURITY & PERFORMANCE =========
 app.use(helmet({ contentSecurityPolicy: false }));
@@ -99,27 +100,28 @@ app.use(
   })
 );
 
-// ========= DB (NEON) =========
+// ========= DB (NEON via pg) =========
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: { rejectUnauthorized: false },
   max: 20,
   idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 2000,
+  connectionTimeoutMillis: 10000,
 });
 
-pool
-  .query('SELECT NOW()')
-  .then(() => console.log('✅ Neon PostgreSQL connected'))
-  .catch((err) => {
-    console.error('❌ DB connection failed:', err.message);
-    process.exit(1);
-  });
-
-// ========= ERROR HELPER =========
+// ========= HELPERS =========
 function handleError(res, error, status = 500) {
   console.error('Server Error:', error);
-  res.status(status).json({ error: 'Internal Server Error' });
+  return res.status(status).json({
+    error: error.message || 'Internal Server Error',
+  });
+}
+
+function requireAuth(req, res, next) {
+  if (!req.session.userId) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  next();
 }
 
 // ========= HEALTH CHECK =========
@@ -127,7 +129,16 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', time: new Date().toISOString() });
 });
 
-// ========= HOME BOOKS (Google Books, cached) =========
+// ========= DEBUG SESSION =========
+app.get('/api/debug-session', (req, res) => {
+  res.json({
+    sessionID: req.sessionID,
+    userId: req.session?.userId || null,
+    session: req.session,
+  });
+});
+
+// ========= HOME BOOKS =========
 app.get('/api/home-books', async (req, res) => {
   try {
     const cacheKey = 'home-books';
@@ -135,27 +146,31 @@ app.get('/api/home-books', async (req, res) => {
     if (cached) return res.json(cached);
 
     const searchKeywords = [
-      'new', 'bestsellers', 'fiction', 'history',
-      'science', 'fantasy', 'romance', 'computers',
+      'new',
+      'bestsellers',
+      'fiction',
+      'history',
+      'science',
+      'fantasy',
+      'romance',
+      'computers',
     ];
+
     const randomKeyword =
       searchKeywords[Math.floor(Math.random() * searchKeywords.length)];
 
-    const gbRes = await axios.get(
-      'https://www.googleapis.com/books/v1/volumes',
-      {
-        params: {
-          q: randomKeyword,
-          maxResults: 4,
-          key: process.env.GOOGLE_BOOKS_API_KEY,
-        },
-        timeout: 5000,
-      }
-    );
+    const gbRes = await axios.get('https://www.googleapis.com/books/v1/volumes', {
+      params: {
+        q: randomKeyword,
+        maxResults: 4,
+        key: process.env.GOOGLE_BOOKS_API_KEY,
+      },
+      timeout: 5000,
+    });
 
     const items = gbRes.data.items || [];
     homeBooksCache.set(cacheKey, items);
-    res.json(items);
+    return res.json(items);
   } catch (err) {
     console.error('Home-books error:', err.response?.status, err.message);
     if (err.response?.status === 429) {
@@ -171,7 +186,6 @@ app.get('/api/home-books', async (req, res) => {
 
 // REGISTER
 app.post('/api/register', async (req, res) => {
-  console.log('🔍 /api/register body:', req.body);
   const { email, password, first_name, last_name } = req.body;
 
   if (!email || !password) {
@@ -180,7 +194,7 @@ app.post('/api/register', async (req, res) => {
 
   try {
     const existing = await pool.query(
-      'SELECT user_id FROM users WHERE username = $1',
+      'SELECT user_id FROM users WHERE email = $1 OR username = $1',
       [email]
     );
 
@@ -189,21 +203,22 @@ app.post('/api/register', async (req, res) => {
     }
 
     const result = await pool.query(
-      `INSERT INTO users (username, password, first_name, last_name)
-       VALUES ($1, $2, $3, $4)
-       RETURNING user_id, username, first_name, last_name`,
-      [email, password, first_name || null, last_name || null]
+      `INSERT INTO users (email, username, password, first_name, last_name, created_at, updated_at)
+       VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
+       RETURNING user_id, email, username, first_name, last_name`,
+      [email, email, password, first_name || null, last_name || null]
     );
 
     const user = result.rows[0];
     req.session.userId = user.user_id;
 
-    res.status(201).json({
+    return res.status(201).json({
       message: 'User registered successfully',
       user_id: user.user_id,
       user: {
         id: user.user_id,
-        email: user.username,
+        email: user.email,
+        username: user.username,
         first_name: user.first_name,
         last_name: user.last_name,
       },
@@ -217,37 +232,35 @@ app.post('/api/register', async (req, res) => {
 // LOGIN
 app.post('/api/login', async (req, res) => {
   const { email, password } = req.body;
-  console.log('🔍 Login attempt:', { email, password_length: password?.length });
 
   try {
     const result = await pool.query(
-      'SELECT user_id, username, password FROM users WHERE username = $1',
+      'SELECT user_id, email, username, password FROM users WHERE email = $1 OR username = $1',
       [email]
     );
-    console.log('👤 Found users:', result.rows.length);
 
     if (result.rows.length === 0) {
-      console.log('❌ No user found for email:', email);
       return res.status(400).json({ error: 'Invalid email or password' });
     }
 
     const user = result.rows[0];
     const isMatch = password === user.password;
-    console.log('✅ password match:', isMatch);
 
     if (!isMatch) {
       return res.status(400).json({ error: 'Invalid email or password' });
     }
 
     req.session.userId = user.user_id;
-    console.log('🎉 Login success for user:', user.user_id);
 
-    res.json({
+    return res.json({
       message: 'Login successful',
-      user: { id: user.user_id, email: user.username },
+      user: {
+        id: user.user_id,
+        email: user.email,
+        username: user.username,
+      },
     });
   } catch (error) {
-    console.error('💥 Login error:', error);
     return handleError(res, error);
   }
 });
@@ -260,16 +273,39 @@ app.post('/api/logout', (req, res) => {
       return res.status(500).json({ error: 'Logout failed' });
     }
     res.clearCookie('connect.sid');
-    res.json({ message: 'Logged out successfully' });
+    return res.json({ message: 'Logged out successfully' });
   });
 });
 
 // CURRENT SESSION
-app.get('/api/me', (req, res) => {
+app.get('/api/me', async (req, res) => {
   if (!req.session.userId) {
     return res.status(401).json({ user: null });
   }
-  res.json({ userId: req.session.userId });
+
+  try {
+    const result = await pool.query(
+      'SELECT user_id, email, username, first_name, last_name FROM users WHERE user_id = $1',
+      [req.session.userId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ user: null });
+    }
+
+    const user = result.rows[0];
+    return res.json({
+      user: {
+        id: user.user_id,
+        email: user.email,
+        username: user.username,
+        first_name: user.first_name,
+        last_name: user.last_name,
+      },
+    });
+  } catch (error) {
+    return handleError(res, error);
+  }
 });
 
 // =======================
@@ -279,6 +315,7 @@ app.get('/api/me', (req, res) => {
 // GET books by user
 app.get('/api/books/:userId', async (req, res) => {
   const { userId } = req.params;
+
   try {
     const result = await pool.query(
       `SELECT
@@ -290,21 +327,25 @@ app.get('/api/books/:userId', async (req, res) => {
          description_book,
          categories,
          preview_link,
-         rating
+         rating,
+         status,
+         created_at
        FROM books
        WHERE user_id = $1
        ORDER BY book_id DESC`,
       [userId]
     );
-    res.json(result.rows);
+
+    return res.json(result.rows);
   } catch (error) {
-    handleError(res, error);
+    return handleError(res, error);
   }
 });
 
 // GET books by category
 app.get('/api/books/category/:category', async (req, res) => {
   const { category } = req.params;
+
   try {
     const result = await pool.query(
       `SELECT
@@ -316,24 +357,31 @@ app.get('/api/books/category/:category', async (req, res) => {
          description_book,
          categories,
          preview_link,
-         rating
+         rating,
+         status,
+         created_at
        FROM books
        WHERE $1 = ANY(categories)
        ORDER BY book_id DESC`,
       [decodeURIComponent(category)]
     );
-    res.json(result.rows);
+
+    return res.json(result.rows);
   } catch (error) {
-    handleError(res, error);
+    return handleError(res, error);
   }
 });
 
-// ADD book (with Google Books enrichment)
-app.post('/api/books', async (req, res) => {
+// ADD book
+app.post('/api/books', requireAuth, async (req, res) => {
   const { title, author, user_id } = req.body;
 
   if (!title || !author || !user_id) {
     return res.status(400).json({ error: 'Title, author, and user_id are required' });
+  }
+
+  if (Number(user_id) !== Number(req.session.userId)) {
+    return res.status(403).json({ error: 'Forbidden' });
   }
 
   try {
@@ -341,6 +389,8 @@ app.post('/api/books', async (req, res) => {
     let categories = null;
     let description_book = null;
     let preview_link = null;
+    let status = null;
+    let rating = 0;
 
     try {
       const normalizedTitle = title.trim();
@@ -359,40 +409,64 @@ app.post('/api/books', async (req, res) => {
       );
 
       const item = googleRes.data.items?.[0];
+
       if (item) {
         const info = item.volumeInfo || {};
         const rawImage =
           info.imageLinks?.thumbnail ||
           info.imageLinks?.smallThumbnail ||
           null;
+
         image_link = rawImage ? rawImage.replace(/^http:/, 'https:') : null;
         categories = info.categories || null;
         description_book = info.description || null;
         preview_link = info.previewLink || null;
+        status = 'found';
+
+        if (typeof info.averageRating === 'number') {
+          rating = Math.round(info.averageRating);
+        }
       } else {
-        console.warn('No Google Books result for:', normalizedTitle, normalizedAuthor);
+        status = 'not_found';
       }
     } catch (gbError) {
-      console.warn('Google Books fetch failed, continuing without enrichment:', gbError.message);
+      console.warn(
+        'Google Books fetch failed, continuing without enrichment:',
+        gbError.message
+      );
     }
 
     const result = await pool.query(
       `INSERT INTO books
-         (title, author, image_link, user_id, description_book, categories, preview_link, rating)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+         (title, author, image_link, user_id, description_book, categories, preview_link, rating, status, created_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW())
        RETURNING book_id`,
-      [title, author, image_link, user_id, description_book, categories, preview_link, 0]
+      [
+        title,
+        author,
+        image_link,
+        user_id,
+        description_book,
+        categories,
+        preview_link,
+        rating,
+        status,
+      ]
     );
 
-    res.status(201).json({ success: true, book_id: result.rows[0].book_id });
+    return res.status(201).json({
+      success: true,
+      book_id: result.rows[0].book_id,
+    });
   } catch (error) {
-    handleError(res, error);
+    return handleError(res, error);
   }
 });
 
 // DELETE book
-app.delete('/api/books/:bookId', async (req, res) => {
+app.delete('/api/books/:bookId', requireAuth, async (req, res) => {
   const { bookId } = req.params;
+
   try {
     const bookRes = await pool.query(
       'SELECT user_id FROM books WHERE book_id = $1',
@@ -403,22 +477,27 @@ app.delete('/api/books/:bookId', async (req, res) => {
       return res.status(404).json({ error: 'Book not found' });
     }
 
-    const userId = bookRes.rows[0].user_id;
+    const ownerId = bookRes.rows[0].user_id;
+
+    if (Number(ownerId) !== Number(req.session.userId)) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+
     await pool.query('DELETE FROM books WHERE book_id = $1', [bookId]);
 
     const countRes = await pool.query(
       'SELECT COUNT(*)::int AS count FROM books WHERE user_id = $1',
-      [userId]
+      [ownerId]
     );
 
-    res.json({ success: true, bookCount: countRes.rows[0].count });
+    return res.json({ success: true, bookCount: countRes.rows[0].count });
   } catch (error) {
-    handleError(res, error);
+    return handleError(res, error);
   }
 });
 
 // UPDATE rating
-app.put('/api/books/:bookId/rating', async (req, res) => {
+app.put('/api/books/:bookId/rating', requireAuth, async (req, res) => {
   const { bookId } = req.params;
   const { rating } = req.body;
 
@@ -427,13 +506,113 @@ app.put('/api/books/:bookId/rating', async (req, res) => {
   }
 
   try {
+    const bookRes = await pool.query(
+      'SELECT user_id FROM books WHERE book_id = $1',
+      [bookId]
+    );
+
+    if (bookRes.rows.length === 0) {
+      return res.status(404).json({ error: 'Book not found' });
+    }
+
+    if (Number(bookRes.rows[0].user_id) !== Number(req.session.userId)) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+
     await pool.query(
       'UPDATE books SET rating = $1 WHERE book_id = $2',
       [rating, bookId]
     );
-    res.json({ success: true });
+
+    return res.json({ success: true });
   } catch (error) {
-    handleError(res, error);
+    return handleError(res, error);
+  }
+});
+
+// =======================
+// FRIEND ROUTES
+// =======================
+
+app.post('/api/friends/request', requireAuth, async (req, res) => {
+  try {
+    const senderId = Number(req.session.userId);
+    const { receiverId } = req.body;
+
+    if (!receiverId) {
+      return res.status(400).json({ error: 'receiverId is required' });
+    }
+
+    const result = await sendFriendRequest(senderId, Number(receiverId));
+    return res.status(201).json(result);
+  } catch (error) {
+    return res.status(400).json({ error: error.message });
+  }
+});
+
+app.get('/api/friends', requireAuth, async (req, res) => {
+  try {
+    const result = await getFriends(Number(req.session.userId));
+    return res.json(result);
+  } catch (error) {
+    return handleError(res, error);
+  }
+});
+
+app.get('/api/friends/requests', requireAuth, async (req, res) => {
+  try {
+    const result = await getPendingRequests(Number(req.session.userId));
+    return res.json(result);
+  } catch (error) {
+    return handleError(res, error);
+  }
+});
+
+app.post('/api/friends/accept/:requestId', requireAuth, async (req, res) => {
+  try {
+    const requestId = Number(req.params.requestId);
+    const currentUserId = Number(req.session.userId);
+
+    const request = await prisma.friendRequest.findUnique({
+      where: { request_id: requestId },
+    });
+
+    if (!request) {
+      return res.status(404).json({ error: 'Request not found' });
+    }
+
+    if (request.receiver_id !== currentUserId) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+
+    const result = await acceptFriendRequest(requestId);
+    return res.json(result);
+  } catch (error) {
+    return res.status(400).json({ error: error.message });
+  }
+});
+
+app.post('/api/friends/reject/:requestId', requireAuth, async (req, res) => {
+  try {
+    const requestId = Number(req.params.requestId);
+    const currentUserId = Number(req.session.userId);
+
+    const request = await prisma.friendRequest.findUnique({
+      where: { request_id: requestId },
+    });
+
+    if (!request) {
+      return res.status(404).json({ error: 'Request not found' });
+    }
+
+    if (request.receiver_id !== currentUserId) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+
+    const result = await rejectFriendRequest(requestId);
+    return res.json(result);
+  } catch (error) {
+    return res.status(400).json({ error: error.message });
   }
 });
 
@@ -442,43 +621,77 @@ app.put('/api/books/:bookId/rating', async (req, res) => {
 // =======================
 app.post('/api/forgot-password', async (req, res) => {
   const { email } = req.body;
+
   if (!email) {
     return res.status(400).json({ error: 'Email is required' });
   }
+
   try {
     const result = await pool.query(
-      'SELECT user_id FROM users WHERE username = $1',
+      'SELECT user_id FROM users WHERE email = $1 OR username = $1',
       [email]
     );
-    // Always return 200 to prevent email enumeration
+
     if (result.rows.length === 0) {
       return res.json({ message: 'If that email exists, a reset link has been sent.' });
     }
-    // TODO: send actual reset email
-    res.json({ message: 'If that email exists, a reset link has been sent.' });
+
+    return res.json({ message: 'If that email exists, a reset link has been sent.' });
   } catch (error) {
-    handleError(res, error);
+    return handleError(res, error);
   }
 });
 
-// ========= 404 & ERROR HANDLERS =========
+// ========= 404 =========
 app.use((req, res) => {
   res.status(404).json({ error: 'Not Found' });
 });
 
+// ========= ERROR HANDLER =========
 app.use((err, req, res, next) => {
   console.error('Unhandled error:', err);
-  res.status(500).json({ error: 'Internal Server Error' });
+  res.status(err.status || 500).json({
+    error: err.message || 'Internal Server Error',
+  });
 });
 
 // =======================
 // START SERVER
 // =======================
-const server = app.listen(port, () => {
-  console.log(`📡 Server live on port ${port} (${process.env.NODE_ENV || 'development'})`);
-});
+let server;
 
-process.on('SIGTERM', () => {
+pool
+  .query('SELECT NOW()')
+  .then(() => {
+    console.log('✅ Neon PostgreSQL connected');
+    server = app.listen(port, () => {
+      console.log(`📡 Server live on port ${port} (${process.env.NODE_ENV || 'development'})`);
+    });
+  })
+  .catch((err) => {
+    console.error('❌ DB connection failed:', err.message);
+    process.exit(1);
+  });
+
+// ========= SHUTDOWN =========
+process.on('SIGTERM', async () => {
   console.log('🛑 Graceful shutdown');
-  server.close(() => pool.end());
+  if (server) {
+    server.close(async () => {
+      try {
+        await pool.end();
+        await prisma.$disconnect();
+      } catch (err) {
+        console.error('Shutdown error:', err);
+      }
+    });
+  } else {
+    try {
+      await pool.end();
+      await prisma.$disconnect();
+    } catch (err) {
+      console.error('Shutdown error:', err);
+    }
+    process.exit(0);
+  }
 });

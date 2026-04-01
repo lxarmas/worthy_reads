@@ -1,0 +1,72 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  user_id    Int      @id @default(autoincrement())
+  email      String   @unique
+  username   String   @unique
+  password   String
+  first_name String?
+  last_name  String?
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  books                Book[]
+  sentRequests         FriendRequest[] @relation("SentFriendRequests")
+  receivedRequests     FriendRequest[] @relation("ReceivedFriendRequests")
+  friendshipsAsUserOne Friendship[]    @relation("FriendshipsUserOne")
+  friendshipsAsUserTwo Friendship[]    @relation("FriendshipsUserTwo")
+
+  @@map("users")
+}
+
+model Book {
+  book_id          Int      @id @default(autoincrement())
+  user_id          Int
+  title            String
+  author           String?
+  status           String?
+  rating           Int?
+  image_link       String?
+  description_book String?
+  categories       String[]
+  preview_link     String?
+  created_at       DateTime @default(now())
+
+  user User @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+
+  @@map("books")
+}
+
+model FriendRequest {
+  request_id  Int      @id @default(autoincrement())
+  sender_id   Int
+  receiver_id Int
+  status      String   @default("pending")
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  sender   User @relation("SentFriendRequests", fields: [sender_id], references: [user_id], onDelete: Cascade)
+  receiver User @relation("ReceivedFriendRequests", fields: [receiver_id], references: [user_id], onDelete: Cascade)
+
+  @@unique([sender_id, receiver_id])
+  @@map("friend_requests")
+}
+
+model Friendship {
+  friendship_id Int      @id @default(autoincrement())
+  user_one_id   Int
+  user_two_id   Int
+  created_at    DateTime @default(now())
+
+  userOne User @relation("FriendshipsUserOne", fields: [user_one_id], references: [user_id], onDelete: Cascade)
+  userTwo User @relation("FriendshipsUserTwo", fields: [user_two_id], references: [user_id], onDelete: Cascade)
+
+  @@unique([user_one_id, user_two_id])
+  @@map("friendships")
+}

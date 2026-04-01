@@ -12,6 +12,8 @@
   "license": "ISC",
   "dependencies": {
     "@aws-amplify/ui-react": "^6.5.0",
+    "@prisma/adapter-pg": "^7.6.0",
+    "@prisma/client": "^7.6.0",
     "aws-amplify": "^6.6.2",
     "axios": "^1.7.2",
     "bcrypt": "^6.0.0",
@@ -27,5 +29,9 @@
     "memorystore": "^1.6.7",
     "node-cache": "^5.1.2",
     "pg": "^8.12.0"
-  }
+  },
+  "devDependencies": {
+    "prisma": "^7.6.0"
+  },
+  "proxy": "http://localhost:3000"
 }

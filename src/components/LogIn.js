@@ -21,7 +21,6 @@ function LogIn() {
       const userId = response.data?.user?.id;
 
       if (userId) {
-        localStorage.setItem('userId', String(userId));
         navigate('/books');
       } else {
         setError('Login failed. Could not get user ID.');
@@ -45,7 +44,6 @@ function LogIn() {
         href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"
       />
 
-      {/* ── Loading Overlay ── */}
       {isLoading && (
         <div
           style={{
@@ -126,7 +124,7 @@ function LogIn() {
                 boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
               }}
             >
-              <form onSubmit={handleSubmit}>
+              <form onSubmit={handleSubmit} autoComplete="on">
                 <div className="form-group mb-4">
                   <label htmlFor="email" style={{ fontWeight: 'bold' }}>
                     Email
@@ -135,6 +133,8 @@ function LogIn() {
                     type="email"
                     className="form-control"
                     id="email"
+                    name="email"
+                    autoComplete="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="Enter your email"
@@ -151,6 +151,8 @@ function LogIn() {
                     type="password"
                     className="form-control"
                     id="password"
+                    name="password"
+                    autoComplete="current-password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Enter your password"
