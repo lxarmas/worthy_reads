@@ -11,11 +11,19 @@ const path = require('path');
 const helmet = require('helmet');
 const compression = require('compression');
 const NodeCache = require('node-cache');
-// const bcrypt = require('bcrypt'); // keep for future secure passwords
 
 const app = express();
 const port = process.env.PORT || 3000;
 const isProd = process.env.NODE_ENV === 'production';
+
+// ========= ENV GUARDS =========
+if (!process.env.DATABASE_URL) {
+  console.error('❌ DATABASE_URL is not set. Exiting.');
+  process.exit(1);
+}
+if (!process.env.GOOGLE_BOOKS_API_KEY) {
+  console.warn('⚠️  GOOGLE_BOOKS_API_KEY is not set — home-books will fail.');
+}
 
 // ========= CACHES =========
 const homeBooksCache = new NodeCache({ stdTTL: 60 * 10 }); // 10 minutes
@@ -64,12 +72,8 @@ app.use(
   })
 );
 
-// ========= SECURITY & PERFORMANCE MIDDLEWARE =========
-app.use(
-  helmet({
-    contentSecurityPolicy: false,
-  })
-);
+// ========= SECURITY & PERFORMANCE =========
+app.use(helmet({ contentSecurityPolicy: false }));
 app.use(compression());
 
 // ========= BODY & STATIC =========
@@ -77,11 +81,11 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 
-// ========= SESSIONS (memorystore) =========
+// ========= SESSIONS =========
 app.use(
   session({
     store: new MemoryStore({
-      checkPeriod: 1000 * 60 * 60 * 24, // prune expired entries every 24h
+      checkPeriod: 1000 * 60 * 60 * 24,
     }),
     secret: secretKey,
     resave: false,
@@ -96,31 +100,21 @@ app.use(
 );
 
 // ========= DB (NEON) =========
-const pool =
-  process.env.DATABASE_URL
-    ? new Pool({
-        connectionString: process.env.DATABASE_URL,
-        ssl: { rejectUnauthorized: false },
-        max: 20,
-        idleTimeoutMillis: 30000,
-        connectionTimeoutMillis: 2000,
-      })
-    : new Pool({
-        host: 'ep-holy-fog-afyq354l-pooler.c-2.us-west-2.aws.neon.tech',
-        port: 5432,
-        user: 'neondb_owner',
-        password: 'npg_eQyJvGLPMj15',
-        database: 'neondb',
-        ssl: { rejectUnauthorized: false },
-        max: 20,
-        idleTimeoutMillis: 30000,
-        connectionTimeoutMillis: 2000,
-      });
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false },
+  max: 20,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 2000,
+});
 
 pool
   .query('SELECT NOW()')
   .then(() => console.log('✅ Neon PostgreSQL connected'))
-  .catch((err) => console.error('❌ DB Error:', err));
+  .catch((err) => {
+    console.error('❌ DB connection failed:', err.message);
+    process.exit(1);
+  });
 
 // ========= ERROR HELPER =========
 function handleError(res, error, status = 500) {
@@ -133,24 +127,16 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', time: new Date().toISOString() });
 });
 
-// ========= HOME BOOKS (Google Books via Express, cached) =========
+// ========= HOME BOOKS (Google Books, cached) =========
 app.get('/api/home-books', async (req, res) => {
   try {
     const cacheKey = 'home-books';
     const cached = homeBooksCache.get(cacheKey);
-    if (cached) {
-      return res.json(cached);
-    }
+    if (cached) return res.json(cached);
 
     const searchKeywords = [
-      'new',
-      'bestsellers',
-      'fiction',
-      'history',
-      'science',
-      'fantasy',
-      'romance',
-      'computers',
+      'new', 'bestsellers', 'fiction', 'history',
+      'science', 'fantasy', 'romance', 'computers',
     ];
     const randomKeyword =
       searchKeywords[Math.floor(Math.random() * searchKeywords.length)];
@@ -168,16 +154,10 @@ app.get('/api/home-books', async (req, res) => {
     );
 
     const items = gbRes.data.items || [];
-
     homeBooksCache.set(cacheKey, items);
-
     res.json(items);
   } catch (err) {
-    console.error(
-      'Home-books Google API error:',
-      err.response?.status,
-      err.message
-    );
+    console.error('Home-books error:', err.response?.status, err.message);
     if (err.response?.status === 429) {
       return res.status(429).json({ error: 'Google Books rate limit hit' });
     }
@@ -237,10 +217,7 @@ app.post('/api/register', async (req, res) => {
 // LOGIN
 app.post('/api/login', async (req, res) => {
   const { email, password } = req.body;
-  console.log('🔍 Login attempt:', {
-    email,
-    password_length: password?.length,
-  });
+  console.log('🔍 Login attempt:', { email, password_length: password?.length });
 
   try {
     const result = await pool.query(
@@ -255,7 +232,6 @@ app.post('/api/login', async (req, res) => {
     }
 
     const user = result.rows[0];
-
     const isMatch = password === user.password;
     console.log('✅ password match:', isMatch);
 
@@ -276,7 +252,19 @@ app.post('/api/login', async (req, res) => {
   }
 });
 
-// Current session info
+// LOGOUT
+app.post('/api/logout', (req, res) => {
+  req.session.destroy((err) => {
+    if (err) {
+      console.error('Logout error:', err);
+      return res.status(500).json({ error: 'Logout failed' });
+    }
+    res.clearCookie('connect.sid');
+    res.json({ message: 'Logged out successfully' });
+  });
+});
+
+// CURRENT SESSION
 app.get('/api/me', (req, res) => {
   if (!req.session.userId) {
     return res.status(401).json({ user: null });
@@ -291,7 +279,6 @@ app.get('/api/me', (req, res) => {
 // GET books by user
 app.get('/api/books/:userId', async (req, res) => {
   const { userId } = req.params;
-
   try {
     const result = await pool.query(
       `SELECT
@@ -309,21 +296,44 @@ app.get('/api/books/:userId', async (req, res) => {
        ORDER BY book_id DESC`,
       [userId]
     );
-
     res.json(result.rows);
   } catch (error) {
     handleError(res, error);
   }
 });
 
-// ADD book (Google Books enrichment per insert)
+// GET books by category
+app.get('/api/books/category/:category', async (req, res) => {
+  const { category } = req.params;
+  try {
+    const result = await pool.query(
+      `SELECT
+         book_id,
+         title,
+         author,
+         image_link,
+         user_id,
+         description_book,
+         categories,
+         preview_link,
+         rating
+       FROM books
+       WHERE $1 = ANY(categories)
+       ORDER BY book_id DESC`,
+      [decodeURIComponent(category)]
+    );
+    res.json(result.rows);
+  } catch (error) {
+    handleError(res, error);
+  }
+});
+
+// ADD book (with Google Books enrichment)
 app.post('/api/books', async (req, res) => {
   const { title, author, user_id } = req.body;
 
   if (!title || !author || !user_id) {
-    return res
-      .status(400)
-      .json({ error: 'Title, author, and user_id are required' });
+    return res.status(400).json({ error: 'Title, author, and user_id are required' });
   }
 
   try {
@@ -348,38 +358,22 @@ app.post('/api/books', async (req, res) => {
         }
       );
 
-      console.log(
-        'Google Books search for:',
-        normalizedTitle,
-        normalizedAuthor
-      );
-      console.log(JSON.stringify(googleRes.data, null, 2));
-
       const item = googleRes.data.items?.[0];
       if (item) {
         const info = item.volumeInfo || {};
-
         const rawImage =
           info.imageLinks?.thumbnail ||
           info.imageLinks?.smallThumbnail ||
           null;
-
         image_link = rawImage ? rawImage.replace(/^http:/, 'https:') : null;
         categories = info.categories || null;
         description_book = info.description || null;
         preview_link = info.previewLink || null;
       } else {
-        console.warn(
-          'No items returned for',
-          normalizedTitle,
-          normalizedAuthor
-        );
+        console.warn('No Google Books result for:', normalizedTitle, normalizedAuthor);
       }
     } catch (gbError) {
-      console.warn(
-        'Google Books fetch failed, continuing without extra data:',
-        gbError.message
-      );
+      console.warn('Google Books fetch failed, continuing without enrichment:', gbError.message);
     }
 
     const result = await pool.query(
@@ -387,22 +381,10 @@ app.post('/api/books', async (req, res) => {
          (title, author, image_link, user_id, description_book, categories, preview_link, rating)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
        RETURNING book_id`,
-      [
-        title,
-        author,
-        image_link,
-        user_id,
-        description_book,
-        categories,
-        preview_link,
-        0,
-      ]
+      [title, author, image_link, user_id, description_book, categories, preview_link, 0]
     );
 
-    res.status(201).json({
-      success: true,
-      book_id: result.rows[0].book_id,
-    });
+    res.status(201).json({ success: true, book_id: result.rows[0].book_id });
   } catch (error) {
     handleError(res, error);
   }
@@ -411,7 +393,6 @@ app.post('/api/books', async (req, res) => {
 // DELETE book
 app.delete('/api/books/:bookId', async (req, res) => {
   const { bookId } = req.params;
-
   try {
     const bookRes = await pool.query(
       'SELECT user_id FROM books WHERE book_id = $1',
@@ -423,7 +404,6 @@ app.delete('/api/books/:bookId', async (req, res) => {
     }
 
     const userId = bookRes.rows[0].user_id;
-
     await pool.query('DELETE FROM books WHERE book_id = $1', [bookId]);
 
     const countRes = await pool.query(
@@ -431,10 +411,7 @@ app.delete('/api/books/:bookId', async (req, res) => {
       [userId]
     );
 
-    res.json({
-      success: true,
-      bookCount: countRes.rows[0].count,
-    });
+    res.json({ success: true, bookCount: countRes.rows[0].count });
   } catch (error) {
     handleError(res, error);
   }
@@ -445,13 +422,40 @@ app.put('/api/books/:bookId/rating', async (req, res) => {
   const { bookId } = req.params;
   const { rating } = req.body;
 
-  try {
-    await pool.query('UPDATE books SET rating = $1 WHERE book_id = $2', [
-      rating,
-      bookId,
-    ]);
+  if (rating === undefined || rating < 0 || rating > 5) {
+    return res.status(400).json({ error: 'Rating must be between 0 and 5' });
+  }
 
+  try {
+    await pool.query(
+      'UPDATE books SET rating = $1 WHERE book_id = $2',
+      [rating, bookId]
+    );
     res.json({ success: true });
+  } catch (error) {
+    handleError(res, error);
+  }
+});
+
+// =======================
+// FORGOT PASSWORD
+// =======================
+app.post('/api/forgot-password', async (req, res) => {
+  const { email } = req.body;
+  if (!email) {
+    return res.status(400).json({ error: 'Email is required' });
+  }
+  try {
+    const result = await pool.query(
+      'SELECT user_id FROM users WHERE username = $1',
+      [email]
+    );
+    // Always return 200 to prevent email enumeration
+    if (result.rows.length === 0) {
+      return res.json({ message: 'If that email exists, a reset link has been sent.' });
+    }
+    // TODO: send actual reset email
+    res.json({ message: 'If that email exists, a reset link has been sent.' });
   } catch (error) {
     handleError(res, error);
   }
@@ -463,7 +467,7 @@ app.use((req, res) => {
 });
 
 app.use((err, req, res, next) => {
-  console.error('Unhandled error middleware:', err);
+  console.error('Unhandled error:', err);
   res.status(500).json({ error: 'Internal Server Error' });
 });
 
@@ -471,14 +475,10 @@ app.use((err, req, res, next) => {
 // START SERVER
 // =======================
 const server = app.listen(port, () => {
-  console.log(
-    `📡 Server live on port ${port} (${process.env.NODE_ENV || 'development'})`
-  );
+  console.log(`📡 Server live on port ${port} (${process.env.NODE_ENV || 'development'})`);
 });
 
 process.on('SIGTERM', () => {
   console.log('🛑 Graceful shutdown');
-  server.close(() => {
-    pool.end();
-  });
+  server.close(() => pool.end());
 });

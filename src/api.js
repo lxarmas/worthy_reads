@@ -38,10 +38,19 @@ export const registerUser = async (data) => {
   );
   return res;
 };
-
-
 export const fetchBooks = async (userId) => {
   return await api.get(`/api/books/${userId}`);
+};
+
+
+export const fetchHomeBooks = async () => {
+  try {
+    const response = await api.get('/api/home-books');
+    return response.data;
+  } catch (error) {
+    if (error.response?.status === 429) throw new Error('rate_limit');
+    throw error;
+  }
 };
 
 export const addBook = async (bookData) => {

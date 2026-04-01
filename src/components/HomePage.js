@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Rating from './Rating';
-import axios from 'axios';
+import {fetchHomeBooks} from '../api';
 import './HomePage.css';
 
 function BookCard({ book, index }) {
@@ -98,27 +98,23 @@ export default function HomePage() {
   const [visible, setVisible] = useState(false);
   const hasFetched = useRef(false);
 
-  useEffect(() => {
-    setTimeout(() => setVisible(true), 80);
-    if (hasFetched.current) { setLoading(false); return; }
-    hasFetched.current = true;
-    const ctrl = new AbortController();
-    axios.get('/api/home-books', { signal: ctrl.signal })
-      .then(r => {
-        const d = r.data;
-        setBooks(Array.isArray(d) ? d : Array.isArray(d?.items) ? d.items : []);
-      })
-      .catch(err => {
-        if (!axios.isCancel(err)) {
-          setError(err.response?.status === 429
-            ? 'Taking a short break. Check back soon.'
-            : 'Could not load books right now.');
-          setBooks([]);
-        }
-      })
-      .finally(() => setLoading(false));
-    return () => ctrl.abort();
-  }, []);
+useEffect(() => {
+  setTimeout(() => setVisible(true), 80);
+  if (hasFetched.current) { setLoading(false); return; }
+  hasFetched.current = true;
+
+  fetchHomeBooks()
+    .then(data => {
+      setBooks(Array.isArray(data) ? data : []);
+    })
+    .catch(err => {
+      setError(err.message === 'rate_limit'
+        ? 'Taking a short break. Check back soon.'
+        : 'Could not load books right now.');
+      setBooks([]);
+    })
+    .finally(() => setLoading(false));
+}, []);
 
   return (
     <div className="wr-root">
