@@ -171,7 +171,37 @@ app.get('/api/home-books', async (req, res) => {
     return res.status(500).json({ error: 'Failed to fetch home books' });
   }
 });
+app.get('/api/users/search', requireAuth, async (req, res) => {
+  const q = (req.query.q || '').trim();
 
+  if (!q) {
+    return res.json([]);
+  }
+
+  try {
+    const result = await pool.query(
+      `
+      SELECT user_id, email, username, first_name, last_name
+      FROM users
+      WHERE user_id <> $1
+        AND (
+          email ILIKE $2 OR
+          username ILIKE $2 OR
+          first_name ILIKE $2 OR
+          last_name ILIKE $2 OR
+          CONCAT(COALESCE(first_name, ''), ' ', COALESCE(last_name, '')) ILIKE $2
+        )
+      ORDER BY username ASC NULLS LAST, email ASC
+      LIMIT 10
+      `,
+      [Number(req.session.userId), `%${q}%`]
+    );
+
+    return res.json(result.rows);
+  } catch (error) {
+    return handleError(res, error);
+  }
+});
 // =======================
 // AUTH ROUTES
 // =======================

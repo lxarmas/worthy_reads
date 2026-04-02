@@ -164,6 +164,20 @@ export const sendResetEmail = async (data) => {
 };
 
 // Friend APIs
+export const searchUsers = async (query) => {
+  try {
+    const res = await api.get(
+      `/api/users/search?q=${encodeURIComponent(query)}`
+    );
+    return res.data;
+  } catch (error) {
+    const apiError =
+      error.response?.data?.error ||
+      error.message ||
+      'Failed to search users.';
+    throw new Error(apiError);
+  }
+};
 export const sendFriendRequestApi = async (receiverId) => {
   try {
     const res = await api.post('/api/friends/request', { receiverId });
@@ -189,6 +203,7 @@ export const fetchFriends = async () => {
     throw new Error(apiError);
   }
 };
+
 
 export const fetchPendingRequests = async () => {
   try {
