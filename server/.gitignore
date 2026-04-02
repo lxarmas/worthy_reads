@@ -24,4 +24,3 @@ yarn-error.log*
 # OS generated
 .DS_Store
 
-/generated/prisma

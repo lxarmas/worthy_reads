@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { loginUser } from '../api';
 
-function LogIn() {
+function LogIn({ setUser }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -16,14 +16,13 @@ function LogIn() {
 
     try {
       const response = await loginUser({ email, password });
-      console.log('Full response data:', JSON.stringify(response.data));
+      const user = response.data?.user;
 
-      const userId = response.data?.user?.id;
-
-      if (userId) {
+      if (user) {
+        setUser(user);
         navigate('/books');
       } else {
-        setError('Login failed. Could not get user ID.');
+        setError('Login failed. Could not get user data.');
       }
     } catch (err) {
       console.error('Login error:', err.response ? err.response.data : err.message);

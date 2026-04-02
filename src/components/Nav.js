@@ -1,62 +1,81 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { logoutUser } from '../api';
 import './Nav.css';
 
-function Nav() {
+function Nav({ user, setUser }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-  const userId = localStorage.getItem('userId');
 
-  useEffect(() => { setMenuOpen(false); }, [location]);
+  useEffect(() => {
+    setMenuOpen(false);
+  }, [location]);
 
   useEffect(() => {
     document.body.style.overflow = menuOpen ? 'hidden' : '';
-    return () => { document.body.style.overflow = ''; };
+    return () => {
+      document.body.style.overflow = '';
+    };
   }, [menuOpen]);
 
-  const handleLogout = () => {
-    localStorage.removeItem('userId');
-    localStorage.removeItem('rememberMe');
-    localStorage.removeItem('sessionExpiry');
-    localStorage.removeItem('userEmail');
-    navigate('/login');
+  const handleLogout = async () => {
+    try {
+      setIsLoggingOut(true);
+      await logoutUser();
+      setUser(null);
+      setMenuOpen(false);
+      navigate('/');
+    } catch (error) {
+      console.error('Logout failed:', error.message || error);
+    } finally {
+      setIsLoggingOut(false);
+    }
   };
 
   const isActive = (path) => location.pathname === path;
 
   return (
     <>
-      {/* Floating hamburger button — always visible */}
       <button
         className={`wn__burger ${menuOpen ? 'wn__burger--open' : ''}`}
-        onClick={() => setMenuOpen(o => !o)}
+        onClick={() => setMenuOpen((open) => !open)}
         aria-label="Menu"
+        type="button"
       >
-        <span /><span /><span />
+        <span />
+        <span />
+        <span />
       </button>
 
-      {/* Dark overlay */}
       <div
         className={`wn__overlay ${menuOpen ? 'wn__overlay--in' : ''}`}
         onClick={() => setMenuOpen(false)}
       />
 
-      {/* Side panel */}
       <div className={`wn__panel ${menuOpen ? 'wn__panel--in' : ''}`}>
         <div className="wn__panel-head">
           <Link to="/" className="wn__wordmark" onClick={() => setMenuOpen(false)}>
             <span className="wn__w-thin">Worthy</span>
             <span className="wn__w-bold">Reads</span>
           </Link>
-          <button className="wn__close" onClick={() => setMenuOpen(false)}>✕</button>
+
+          <button
+            className="wn__close"
+            onClick={() => setMenuOpen(false)}
+            type="button"
+            aria-label="Close menu"
+          >
+            ✕
+          </button>
         </div>
 
         <ul className="wn__panel-links">
           {[
             { to: '/', label: 'Home' },
             { to: '/about', label: 'About' },
-            ...(userId ? [{ to: '/books', label: 'My Library' }] : []),
+            ...(user ? [{ to: '/books', label: 'My Library' }] : []),
           ].map(({ to, label }, i) => (
             <li key={to} style={{ animationDelay: `${0.06 + i * 0.05}s` }}>
               <Link
@@ -71,10 +90,24 @@ function Nav() {
         </ul>
 
         <div className="wn__panel-foot">
-          {userId ? (
-            <button className="wn__panel-logout" onClick={handleLogout}>Sign out</button>
+          {user ? (
+            <>
+              <div className="wn__panel-user">
+                Signed in as {user.username || user.email}
+              </div>
+              <button
+                className="wn__panel-logout"
+                onClick={handleLogout}
+                type="button"
+                disabled={isLoggingOut}
+              >
+                {isLoggingOut ? 'Signing out…' : 'Sign out'}
+              </button>
+            </>
           ) : (
-            <Link to="/login" className="wn__panel-cta">Sign in to your library</Link>
+            <Link to="/login" className="wn__panel-cta">
+              Sign in to your library
+            </Link>
           )}
         </div>
       </div>

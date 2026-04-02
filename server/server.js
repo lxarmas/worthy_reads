@@ -5,14 +5,15 @@ const session = require('express-session');
 const MemoryStore = require('memorystore')(session);
 const crypto = require('crypto');
 const axios = require('axios');
-const { Pool } = require('pg');
 const cors = require('cors');
 const path = require('path');
 const helmet = require('helmet');
 const compression = require('compression');
 const NodeCache = require('node-cache');
 
-const prisma = require('./prismaClient');
+// use shared pg pool
+const pool = require('./db');
+
 const {
   sendFriendRequest,
   acceptFriendRequest,
@@ -99,15 +100,6 @@ app.use(
     },
   })
 );
-
-// ========= DB (NEON via pg) =========
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false },
-  max: 20,
-  idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 10000,
-});
 
 // ========= HELPERS =========
 function handleError(res, error, status = 500) {
@@ -573,10 +565,12 @@ app.post('/api/friends/accept/:requestId', requireAuth, async (req, res) => {
     const requestId = Number(req.params.requestId);
     const currentUserId = Number(req.session.userId);
 
-    const request = await prisma.friendRequest.findUnique({
-      where: { request_id: requestId },
-    });
+    const { rows } = await pool.query(
+      `SELECT receiver_id FROM friend_requests WHERE request_id = $1`,
+      [requestId]
+    );
 
+    const request = rows[0];
     if (!request) {
       return res.status(404).json({ error: 'Request not found' });
     }
@@ -597,10 +591,12 @@ app.post('/api/friends/reject/:requestId', requireAuth, async (req, res) => {
     const requestId = Number(req.params.requestId);
     const currentUserId = Number(req.session.userId);
 
-    const request = await prisma.friendRequest.findUnique({
-      where: { request_id: requestId },
-    });
+    const { rows } = await pool.query(
+      `SELECT receiver_id FROM friend_requests WHERE request_id = $1`,
+      [requestId]
+    );
 
+    const request = rows[0];
     if (!request) {
       return res.status(404).json({ error: 'Request not found' });
     }
@@ -680,18 +676,19 @@ process.on('SIGTERM', async () => {
     server.close(async () => {
       try {
         await pool.end();
-        await prisma.$disconnect();
       } catch (err) {
         console.error('Shutdown error:', err);
+      } finally {
+        process.exit(0);
       }
     });
   } else {
     try {
       await pool.end();
-      await prisma.$disconnect();
     } catch (err) {
       console.error('Shutdown error:', err);
+    } finally {
+      process.exit(0);
     }
-    process.exit(0);
   }
 });
